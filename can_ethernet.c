@@ -19,11 +19,30 @@ CAN_struct CAN_data;
 volatile unsigned long message_count = 0;		// received message count
 volatile unsigned long update_count = 0;		// print updates once this threshold is reached
 volatile unsigned long lost_message_count = 0;	// lost CAN message count
-static char print_buf[64];						// buffer to print messages to OLED
+static char print_buf[64];
+
+//display an lwIP address
+void display_ip_address(unsigned long ipaddr, unsigned long col, unsigned long row)
+{
+    char buffer[16];
+    unsigned char *temp = (unsigned char *)&ipaddr;
+
+    // Convert the IP Address into a string for display purposes
+    usprintf(buffer, "%d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
+
+    // Display on OLED
+    RIT128x96x4StringDraw(buffer, col, row, 15);
+}
+
+void display_can_statistics(unsigned long msg_count, unsigned long lost_count, unsigned long col, unsigned long row)
+{
+    usprintf(print_buf, "%u / %u  ", lost_count, msg_count);
+    RIT128x96x4StringDraw(print_buf, col, row, 15);
+}
 
 
 // CAN controller interrupt handler.
-void CANIntHandler(void)
+void CAN_interrupt_handler(void)
 {
     unsigned long status;
     status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, 
@@ -184,8 +203,7 @@ int main(void)
         //NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
         if (update_count >= UPDATE_RATE)
         {
-            usprintf(print_buf, "%u / %u  ", lost_message_count, message_count);
-            RIT128x96x4StringDraw(print_buf, 5, 80, 15);
+            display_can_statistics(message_count,lost_message_count,5,80);
             update_count = 0;                                   //reset the update count
         }
     }

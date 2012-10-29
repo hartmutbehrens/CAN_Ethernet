@@ -2,127 +2,88 @@
 //
 // startup_gcc.c - Startup code for use with GNU tools.
 //
-// Copyright (c) 2009-2012 Texas Instruments Incorporated.  All rights reserved.
-// Software License Agreement
-// 
-// Texas Instruments (TI) is supplying this software for use solely and
-// exclusively on TI's microcontroller products. The software is owned by
-// TI and/or its suppliers, and is protected under applicable copyright
-// laws. You may not combine this software with "viral" open-source
-// software in order to form a larger program.
-// 
-// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
-// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
-// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
-// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
-// DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
-// This is part of revision 9107 of the EK-LM3S8962 Firmware Package.
-//
 //*****************************************************************************
 
-//*****************************************************************************
-//
-// Forward declaration of the default fault handlers.
-//
-//*****************************************************************************
+// Forward declaration of the default fault handlers. 
 void ResetISR(void);
 static void NmiSR(void);
 static void FaultISR(void);
-static void IntDefaultHandler(void);
+static void default_handler(void);
 
-//*****************************************************************************
-//
-// External declaration for the interrupt handler used by the application.
-//
-//*****************************************************************************
-extern void CANIntHandler(void);
+// External declaration of CAN interupt handler
+extern void CAN_interrupt_handler(void);
 
-//*****************************************************************************
-//
 // The entry point for the application.
-//
-//*****************************************************************************
 extern int main(void);
 
-//*****************************************************************************
-//
 // Reserve space for the system stack.
-//
-//*****************************************************************************
 static unsigned long pulStack[64];
 
-//*****************************************************************************
-//
-// The vector table.  Note that the proper constructs must be placed on this to
-// ensure that it ends up at physical address 0x0000.0000.
-//
-//*****************************************************************************
+// The vector table.  Note that the proper constructs must be placed on this to ensure that it ends up at physical address 0x0000.0000.
 __attribute__ ((section(".isr_vector")))
 void (* const g_pfnVectors[])(void) =
 {
     (void (*)(void))((unsigned long)pulStack + sizeof(pulStack)),
-                                            // The initial stack pointer
-    ResetISR,                               // The reset handler
-    NmiSR,                                  // The NMI handler
-    FaultISR,                               // The hard fault handler
-    IntDefaultHandler,                      // The MPU fault handler
-    IntDefaultHandler,                      // The bus fault handler
-    IntDefaultHandler,                      // The usage fault handler
-    0,                                      // Reserved
-    0,                                      // Reserved
-    0,                                      // Reserved
-    0,                                      // Reserved
-    IntDefaultHandler,                      // SVCall handler
-    IntDefaultHandler,                      // Debug monitor handler
-    0,                                      // Reserved
-    IntDefaultHandler,                      // The PendSV handler
-    IntDefaultHandler,                      // The SysTick handler
-    IntDefaultHandler,                      // GPIO Port A
-    IntDefaultHandler,                      // GPIO Port B
-    IntDefaultHandler,                      // GPIO Port C
-    IntDefaultHandler,                      // GPIO Port D
-    IntDefaultHandler,                      // GPIO Port E
-    IntDefaultHandler,                      // UART0 Rx and Tx
-    IntDefaultHandler,                      // UART1 Rx and Tx
-    IntDefaultHandler,                      // SSI0 Rx and Tx
-    IntDefaultHandler,                      // I2C0 Master and Slave
-    IntDefaultHandler,                      // PWM Fault
-    IntDefaultHandler,                      // PWM Generator 0
-    IntDefaultHandler,                      // PWM Generator 1
-    IntDefaultHandler,                      // PWM Generator 2
-    IntDefaultHandler,                      // Quadrature Encoder 0
-    IntDefaultHandler,                      // ADC Sequence 0
-    IntDefaultHandler,                      // ADC Sequence 1
-    IntDefaultHandler,                      // ADC Sequence 2
-    IntDefaultHandler,                      // ADC Sequence 3
-    IntDefaultHandler,                      // Watchdog timer
-    IntDefaultHandler,                      // Timer 0 subtimer A
-    IntDefaultHandler,                      // Timer 0 subtimer B
-    IntDefaultHandler,                      // Timer 1 subtimer A
-    IntDefaultHandler,                      // Timer 1 subtimer B
-    IntDefaultHandler,                      // Timer 2 subtimer A
-    IntDefaultHandler,                      // Timer 2 subtimer B
-    IntDefaultHandler,                      // Analog Comparator 0
-    IntDefaultHandler,                      // Analog Comparator 1
-    IntDefaultHandler,                      // Analog Comparator 2
-    IntDefaultHandler,                      // System Control (PLL, OSC, BO)
-    IntDefaultHandler,                      // FLASH Control
-    IntDefaultHandler,                      // GPIO Port F
-    IntDefaultHandler,                      // GPIO Port G
-    IntDefaultHandler,                      // GPIO Port H
-    IntDefaultHandler,                      // UART2 Rx and Tx
-    IntDefaultHandler,                      // SSI1 Rx and Tx
-    IntDefaultHandler,                      // Timer 3 subtimer A
-    IntDefaultHandler,                      // Timer 3 subtimer B
-    IntDefaultHandler,                      // I2C1 Master and Slave
-    IntDefaultHandler,                      // Quadrature Encoder 1
-    CANIntHandler,                          // CAN0
-    IntDefaultHandler,                      // CAN1
-    IntDefaultHandler,                      // CAN2
-    IntDefaultHandler,                      // Ethernet
-    IntDefaultHandler                       // Hibernate
+                                          // The initial stack pointer
+    ResetISR,                             // The reset handler
+    NmiSR,                                // The NMI handler
+    FaultISR,                             // The hard fault handler
+    default_handler,                      // The MPU fault handler
+    default_handler,                      // The bus fault handler
+    default_handler,                      // The usage fault handler
+    0,                                    // Reserved
+    0,                                    // Reserved
+    0,                                    // Reserved
+    0,                                    // Reserved
+    default_handler,                      // SVCall handler
+    default_handler,                      // Debug monitor handler
+    0,                                    // Reserved
+    default_handler,                      // The PendSV handler
+    default_handler,                      // The SysTick handler
+    default_handler,                      // GPIO Port A
+    default_handler,                      // GPIO Port B
+    default_handler,                      // GPIO Port C
+    default_handler,                      // GPIO Port D
+    default_handler,                      // GPIO Port E
+    default_handler,                      // UART0 Rx and Tx
+    default_handler,                      // UART1 Rx and Tx
+    default_handler,                      // SSI0 Rx and Tx
+    default_handler,                      // I2C0 Master and Slave
+    default_handler,                      // PWM Fault
+    default_handler,                      // PWM Generator 0
+    default_handler,                      // PWM Generator 1
+    default_handler,                      // PWM Generator 2
+    default_handler,                      // Quadrature Encoder 0
+    default_handler,                      // ADC Sequence 0
+    default_handler,                      // ADC Sequence 1
+    default_handler,                      // ADC Sequence 2
+    default_handler,                      // ADC Sequence 3
+    default_handler,                      // Watchdog timer
+    default_handler,                      // Timer 0 subtimer A
+    default_handler,                      // Timer 0 subtimer B
+    default_handler,                      // Timer 1 subtimer A
+    default_handler,                      // Timer 1 subtimer B
+    default_handler,                      // Timer 2 subtimer A
+    default_handler,                      // Timer 2 subtimer B
+    default_handler,                      // Analog Comparator 0
+    default_handler,                      // Analog Comparator 1
+    default_handler,                      // Analog Comparator 2
+    default_handler,                      // System Control (PLL, OSC, BO)
+    default_handler,                      // FLASH Control
+    default_handler,                      // GPIO Port F
+    default_handler,                      // GPIO Port G
+    default_handler,                      // GPIO Port H
+    default_handler,                      // UART2 Rx and Tx
+    default_handler,                      // SSI1 Rx and Tx
+    default_handler,                      // Timer 3 subtimer A
+    default_handler,                      // Timer 3 subtimer B
+    default_handler,                      // I2C1 Master and Slave
+    default_handler,                      // Quadrature Encoder 1
+    CAN_interrupt_handler,                // CAN0
+    default_handler,                      // CAN1
+    default_handler,                      // CAN2
+    default_handler,                      // Ethernet
+    default_handler                       // Hibernate
 };
 
 //*****************************************************************************
@@ -148,8 +109,7 @@ extern unsigned long _ebss;
 // application.
 //
 //*****************************************************************************
-void
-ResetISR(void)
+void ResetISR(void)
 {
     unsigned long *pulSrc, *pulDest;
 
@@ -188,8 +148,7 @@ ResetISR(void)
 // by a debugger.
 //
 //*****************************************************************************
-static void
-NmiSR(void)
+static void NmiSR(void)
 {
     //
     // Enter an infinite loop.
@@ -206,8 +165,7 @@ NmiSR(void)
 // for examination by a debugger.
 //
 //*****************************************************************************
-static void
-FaultISR(void)
+static void FaultISR(void)
 {
     //
     // Enter an infinite loop.
@@ -224,8 +182,7 @@ FaultISR(void)
 // for examination by a debugger.
 //
 //*****************************************************************************
-static void
-IntDefaultHandler(void)
+static void default_handler(void)
 {
     //
     // Go into an infinite loop.
