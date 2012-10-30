@@ -53,7 +53,7 @@ VPATH+=../utils
 #
 IPATH=.
 IPATH+=..
-#IPATH+=../lwip-1.3.2/apps
+IPATH+=../lwip-1.3.2/apps
 IPATH+=../lwip-1.3.2/ports/stellaris/include
 IPATH+=../lwip-1.3.2/src/include
 IPATH+=../lwip-1.3.2/src/include/ipv4

@@ -40,6 +40,9 @@
 //*****************************************************************************
 #define HOST_TMR_INTERVAL               100         // default is 0
 #define DHCP_EXPIRE_TIMER_MSECS         (10 * 1000)
+#define INCLUDE_HTTPD_SSI
+#define INCLUDE_HTTPD_CGI
+#define DYNAMIC_HTTP_HEADERS
 
 //*****************************************************************************
 //

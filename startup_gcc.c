@@ -10,14 +10,15 @@ static void NMI_handler(void);
 static void HARDFAULT_handler(void);
 static void default_handler(void);
 
-extern void CAN_handler(void);          // External declaration of CAN interupt handler - function is defined defined in another source file
-extern void SYSTICK_handler(void);      //External declaration of SysTick interrup handler - function is defined in another source file
+extern void CAN_handler(void);              // External declaration of CAN interupt handler - function is defined defined in another source file
+extern void SYSTICK_handler(void);          // External declaration of SysTick interupt handler - function is defined in another source file
+extern void lwIPEthernetIntHandler(void);   // External declaration of Ethernet interupt handler - call lwIP handler
 
 // The entry point for the application - function is defined in another source file
 extern int main(void);
 
-// Reserve space for the system stack.
-static unsigned long pulStack[64];
+// Reserve space for the system stack - NB must be at least this size for lwIP
+static unsigned long pulStack[256];
 
 // The vector table.  Note that the proper constructs must be placed on this to ensure that it ends up at physical address 0x0000.0000.
 __attribute__ ((section(".isr_vector")))
@@ -82,7 +83,7 @@ void (* const g_pfnVectors[])(void) =
     CAN_handler,                          // CAN0
     default_handler,                      // CAN1
     default_handler,                      // CAN2
-    default_handler,                      // Ethernet
+    lwIPEthernetIntHandler,               // Ethernet
     default_handler                       // Hibernate
 };
 
