@@ -5,15 +5,15 @@
 //*****************************************************************************
 
 // Forward declaration of the default fault handlers. 
-void ResetISR(void);
-static void NmiSR(void);
-static void FaultISR(void);
+void RESET_handler(void);
+static void NMI_handler(void);
+static void HARDFAULT_handler(void);
 static void default_handler(void);
 
-// External declaration of CAN interupt handler
-extern void CAN_interrupt_handler(void);
+extern void CAN_handler(void);          // External declaration of CAN interupt handler - function is defined defined in another source file
+extern void SYSTICK_handler(void);      //External declaration of SysTick interrup handler - function is defined in another source file
 
-// The entry point for the application.
+// The entry point for the application - function is defined in another source file
 extern int main(void);
 
 // Reserve space for the system stack.
@@ -25,9 +25,9 @@ void (* const g_pfnVectors[])(void) =
 {
     (void (*)(void))((unsigned long)pulStack + sizeof(pulStack)),
                                           // The initial stack pointer
-    ResetISR,                             // The reset handler
-    NmiSR,                                // The NMI handler
-    FaultISR,                             // The hard fault handler
+    RESET_handler,                        // The reset handler
+    NMI_handler,                          // The NMI handler
+    HARDFAULT_handler,                    // The hard fault handler
     default_handler,                      // The MPU fault handler
     default_handler,                      // The bus fault handler
     default_handler,                      // The usage fault handler
@@ -39,7 +39,7 @@ void (* const g_pfnVectors[])(void) =
     default_handler,                      // Debug monitor handler
     0,                                    // Reserved
     default_handler,                      // The PendSV handler
-    default_handler,                      // The SysTick handler
+    SYSTICK_handler,                      // The SysTick handler
     default_handler,                      // GPIO Port A
     default_handler,                      // GPIO Port B
     default_handler,                      // GPIO Port C
@@ -79,7 +79,7 @@ void (* const g_pfnVectors[])(void) =
     default_handler,                      // Timer 3 subtimer B
     default_handler,                      // I2C1 Master and Slave
     default_handler,                      // Quadrature Encoder 1
-    CAN_interrupt_handler,                // CAN0
+    CAN_handler,                          // CAN0
     default_handler,                      // CAN1
     default_handler,                      // CAN2
     default_handler,                      // Ethernet
@@ -109,7 +109,7 @@ extern unsigned long _ebss;
 // application.
 //
 //*****************************************************************************
-void ResetISR(void)
+void RESET_handler(void)
 {
     unsigned long *pulSrc, *pulDest;
 
@@ -148,11 +148,8 @@ void ResetISR(void)
 // by a debugger.
 //
 //*****************************************************************************
-static void NmiSR(void)
+static void NMI_handler(void)
 {
-    //
-    // Enter an infinite loop.
-    //
     while(1)
     {
     }
@@ -165,11 +162,8 @@ static void NmiSR(void)
 // for examination by a debugger.
 //
 //*****************************************************************************
-static void FaultISR(void)
+static void HARDFAULT_handler(void)
 {
-    //
-    // Enter an infinite loop.
-    //
     while(1)
     {
     }
@@ -184,9 +178,6 @@ static void FaultISR(void)
 //*****************************************************************************
 static void default_handler(void)
 {
-    //
-    // Go into an infinite loop.
-    //
     while(1)
     {
     }

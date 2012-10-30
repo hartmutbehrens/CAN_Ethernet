@@ -39,10 +39,15 @@ void display_can_statistics(unsigned long msg_count, unsigned long lost_count, u
     usprintf(print_buf, "%u / %u  ", lost_count, msg_count);
     RIT128x96x4StringDraw(print_buf, col, row, 15);
 }
+// SYSTICK interrup handler
+void SYSTICK_handler(void)
+{
+    
+}
 
 
 // CAN controller interrupt handler.
-void CAN_interrupt_handler(void)
+void CAN_handler(void)
 {
     unsigned long status;
     status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, 

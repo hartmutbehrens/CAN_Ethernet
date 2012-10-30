@@ -89,7 +89,7 @@ ${COMPILER}/can_ethernet.axf: ${COMPILER}/ustdlib.o
 ${COMPILER}/can_ethernet.axf: ${ROOT}/driverlib/${COMPILER}-cm3/libdriver-cm3.a
 ${COMPILER}/can_ethernet.axf: can_ethernet.ld
 SCATTERgcc_can_ethernet=can_ethernet.ld
-ENTRY_can_ethernet=ResetISR
+ENTRY_can_ethernet=RESET_handler
 
 #
 # Include the automatically generated dependency files.
