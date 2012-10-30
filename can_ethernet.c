@@ -111,11 +111,11 @@ void lwIPHostTimerHandler(void)
         RIT128x96x4StringDraw("IP:   ", 0, 16, 15);
         RIT128x96x4StringDraw("MASK: ", 0, 24, 15);
         RIT128x96x4StringDraw("GW:   ", 0, 32, 15);
-        DisplayIPAddress(ip_address, 36, 16);
+        display_ip_address(ip_address, 36, 16);
         ip_address = lwIPLocalNetMaskGet();
-        DisplayIPAddress(ip_address, 36, 24);
+        display_ip_address(ip_address, 36, 24);
         ip_address = lwIPLocalGWAddrGet();
-        DisplayIPAddress(ip_address, 36, 32);
+        display_ip_address(ip_address, 36, 32);
         RIT128x96x4Disable();
     }
 }
@@ -245,28 +245,29 @@ int main(void)
     RIT128x96x4Init(1000000);
 
     
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);                // Configure CAN 0 Pins.
-    GPIOPinTypeCAN(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1);   // Configure CAN 0 Pins.
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_CAN0);                 // Enable the CAN controller.
-    CANInit(CAN0_BASE);                                         // Reset the state of all the message object and the state of the CAN module to a known state.
-    CANBitRateSet(CAN0_BASE, 8000000, CAN_BITRATE);             // Configure the clock rate to the CAN controller at 8MHz and bit rate for the CAN device to CAN_BITRATE
-    CANIntEnable(CAN0_BASE, CAN_INT_MASTER | CAN_INT_ERROR);    // Enable interrupts from CAN controller.
-    IntEnable(INT_CAN0);                                        // Enable interrupts for the CAN in the NVIC.
-    CANEnable(CAN0_BASE);                                       // Take the CAN0 device out of INIT state.    
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);                        // Configure CAN 0 Pins.
+    GPIOPinTypeCAN(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1);           // Configure CAN 0 Pins.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_CAN0);                         // Enable the CAN controller.
+    CANInit(CAN0_BASE);                                                 // Reset the state of all the message object and the state of the CAN module to a known state.
+    CANBitRateSet(CAN0_BASE, 8000000, CAN_BITRATE);                     // Configure the clock rate to the CAN controller at 8MHz and bit rate for the CAN device to CAN_BITRATE
+    CANIntEnable(CAN0_BASE, CAN_INT_MASTER | CAN_INT_ERROR);            // Enable interrupts from CAN controller.
+    IntEnable(INT_CAN0);                                                // Enable interrupts for the CAN in the NVIC.
+    CANEnable(CAN0_BASE);                                               // Take the CAN0 device out of INIT state.    
+            
+    CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;             //assign pointer to buffer that will hold message data
+    CAN_data.bytes_remaining = CAN_FIFO_SIZE;                           // Set the total number of bytes expected.
+    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE);                // Configure the receive message FIFO - this function should only be called once.
 
     
-   //assign pointer to buffer that will hold message data
-    CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_ETH);                          // Enable the Ethernet Controller.
+    SysCtlPeripheralReset(SYSCTL_PERIPH_ETH);                           // Reset the Ethernet Controller.
 
-    // Set the total number of bytes expected.
-    CAN_data.bytes_remaining = CAN_FIFO_SIZE;
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);                        // Enable Port F for Ethernet LEDs.
+    GPIOPinTypeEthernetLED(GPIO_PORTF_BASE, GPIO_PIN_2 | GPIO_PIN_3);   // LED0-Bit 3-Output and LED1-Bit 2-Output
 
-    // Configure the receive message FIFO.
-    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE);
-
-    // Enable and Reset the Ethernet Controller.
-    //SysCtlPeripheralEnable(SYSCTL_PERIPH_ETH);
-    //SysCtlPeripheralReset(SYSCTL_PERIPH_ETH);
+    SysTickPeriodSet(SysCtlClockGet() / SYSTICKHZ);                     // Configure SysTick for a periodic interrupt.
+    SysTickEnable();
+    SysTickIntEnable();
 
     // loop forever
     while (1) 
