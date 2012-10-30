@@ -1,17 +1,30 @@
+
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_can.h"
 #include "inc/hw_types.h"
 #include "driverlib/can.h"
+#include "driverlib/ethernet.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"
+#include "utils/lwiplib.h"
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
 #include "can_ethernet.h"
 
+
+// A set of flags.  0 indicates that a SysTick interrupt has occurred - see SYSTICK_handler
+#define FLAG_SYSTICK 0
+static volatile unsigned long systick_flag;
+
+// Defines for setting up the system clock.
+#define SYSTICKHZ               100
+#define SYSTICKMS               (1000 / SYSTICKHZ)
+#define SYSTICKUS               (1000000 / SYSTICKHZ)
+#define SYSTICKNS               (1000000000 / SYSTICKHZ)
 
 //structure to hold CAN RX and TX data
 CAN_struct CAN_data;
@@ -39,10 +52,72 @@ void display_can_statistics(unsigned long msg_count, unsigned long lost_count, u
     usprintf(print_buf, "%u / %u  ", lost_count, msg_count);
     RIT128x96x4StringDraw(print_buf, col, row, 15);
 }
-// SYSTICK interrup handler
+// SYSTICK interrupt handler
 void SYSTICK_handler(void)
 {
-    
+    HWREGBITW(&systick_flag, FLAG_SYSTICK) = 1;                               // Indicate that a SysTick interrupt has occurred.
+    lwIPTimer(SYSTICKMS);                                                     // Call the lwIP timer handler.
+}
+
+
+// This function is required by lwIP library to support any host-related timer functions.
+void lwIPHostTimerHandler(void)
+{
+    static unsigned long last_ip_address = 0;
+    unsigned long ip_address;
+
+    ip_address = lwIPLocalIPAddrGet();
+
+    //
+    // If IP Address has not yet been assigned, update the display accordingly
+    //
+    if(ip_address == 0)
+    {
+        static int col = 6;
+
+        //
+        // Update status bar on the display.
+        //
+        RIT128x96x4Enable(1000000);
+        if(col < 12)
+        {
+            RIT128x96x4StringDraw(" >", 114, 24, 15);
+            RIT128x96x4StringDraw("< ", 0, 24, 15);
+            RIT128x96x4StringDraw("*",col, 24, 7);
+        }
+        else
+        {
+            RIT128x96x4StringDraw(" *",col - 6, 24, 7);
+        }
+
+        col += 4;
+        if(col > 114)
+        {
+            col = 6;
+            RIT128x96x4StringDraw(" >", 114, 24, 15);
+        }
+        RIT128x96x4Disable();
+    }
+
+    //
+    // Check if IP address has changed, and display if it has.
+    //
+    else if(last_ip_address != ip_address)
+    {
+        last_ip_address = ip_address;
+        RIT128x96x4Enable(1000000);
+        RIT128x96x4StringDraw("                       ", 0, 16, 15);
+        RIT128x96x4StringDraw("                       ", 0, 24, 15);
+        RIT128x96x4StringDraw("IP:   ", 0, 16, 15);
+        RIT128x96x4StringDraw("MASK: ", 0, 24, 15);
+        RIT128x96x4StringDraw("GW:   ", 0, 32, 15);
+        DisplayIPAddress(ip_address, 36, 16);
+        ip_address = lwIPLocalNetMaskGet();
+        DisplayIPAddress(ip_address, 36, 24);
+        ip_address = lwIPLocalGWAddrGet();
+        DisplayIPAddress(ip_address, 36, 32);
+        RIT128x96x4Disable();
+    }
 }
 
 
@@ -60,9 +135,9 @@ void CAN_handler(void)
     {
     	message_count += 1;
     	update_count += 1;
-        CANMessageGet(CAN0_BASE, status, &CAN_data.rx_msg_object, 1);      // Read the data out and acknowledge that it was read.
+        CANMessageGet(CAN0_BASE, status, &CAN_data.rx_msg_object, 1);         // Read the data out and acknowledge that it was read.
 
-        if(CAN_data.rx_msg_object.ulFlags & MSG_OBJ_DATA_LOST)			 // Check to see if there is an indication that some messages were lost.
+        if(CAN_data.rx_msg_object.ulFlags & MSG_OBJ_DATA_LOST)			       // Check to see if there is an indication that some messages were lost.
         {
             lost_message_count += 1;
         }
@@ -169,29 +244,17 @@ int main(void)
     // Initialize the OLED display to run at 1MHz
     RIT128x96x4Init(1000000);
 
-    // Configure CAN 0 Pins.
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-    GPIOPinTypeCAN(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1);
-    // Enable the CAN controller.
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_CAN0);
-    // Reset the state of all the message object and the state of the CAN module to a known state.
-    CANInit(CAN0_BASE);
     
-    // Configure the clock rate to the CAN controller at 8MHz and bit rate for the CAN device to CAN_BITRATE
-    CANBitRateSet(CAN0_BASE, 8000000, CAN_BITRATE);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);                // Configure CAN 0 Pins.
+    GPIOPinTypeCAN(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1);   // Configure CAN 0 Pins.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_CAN0);                 // Enable the CAN controller.
+    CANInit(CAN0_BASE);                                         // Reset the state of all the message object and the state of the CAN module to a known state.
+    CANBitRateSet(CAN0_BASE, 8000000, CAN_BITRATE);             // Configure the clock rate to the CAN controller at 8MHz and bit rate for the CAN device to CAN_BITRATE
+    CANIntEnable(CAN0_BASE, CAN_INT_MASTER | CAN_INT_ERROR);    // Enable interrupts from CAN controller.
+    IntEnable(INT_CAN0);                                        // Enable interrupts for the CAN in the NVIC.
+    CANEnable(CAN0_BASE);                                       // Take the CAN0 device out of INIT state.    
 
-    // Enable interrupts from CAN controller.
-    CANIntEnable(CAN0_BASE, CAN_INT_MASTER | CAN_INT_ERROR);
-
-    // Enable interrupts for the CAN in the NVIC.
-    IntEnable(INT_CAN0);
-
-    // Take the CAN0 device out of INIT state.    
-    CANEnable(CAN0_BASE);
-
-    // Enable processor interrupts.
-    //IntMasterEnable();
-     //
+    
    //assign pointer to buffer that will hold message data
     CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;
 
@@ -200,6 +263,10 @@ int main(void)
 
     // Configure the receive message FIFO.
     CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE);
+
+    // Enable and Reset the Ethernet Controller.
+    //SysCtlPeripheralEnable(SYSCTL_PERIPH_ETH);
+    //SysCtlPeripheralReset(SYSCTL_PERIPH_ETH);
 
     // loop forever
     while (1) 

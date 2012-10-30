@@ -27,7 +27,8 @@ typedef struct
 /* function prototypes */
 void CANIntHandler(void);
 int CAN_receive_FIFO(unsigned char *, unsigned long);
-void display_ip_address(unsigned long ipaddr, unsigned long ulCol,unsigned long ulRow);									//display an lwIP address
-void display_can_statistics(unsigned long msg_count, unsigned long lost_count, unsigned long col, unsigned long row);	//display CAN message statistics
+void display_ip_address(unsigned long ipaddr, unsigned long ulCol,unsigned long ulRow);									// display an lwIP address
+void display_can_statistics(unsigned long msg_count, unsigned long lost_count, unsigned long col, unsigned long row);	// display CAN message statistics
+void lwIPHostTimerHandler(void);																						// This function is required by lwIP library to support any host-related timer functions.
 
 #endif
