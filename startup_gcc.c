@@ -18,7 +18,7 @@ extern void lwIPEthernetIntHandler(void);   // External declaration of Ethernet 
 extern int main(void);
 
 // Reserve space for the system stack - NB must be at least this size for lwIP
-static unsigned long pulStack[256];
+static unsigned long pulStack[320];
 
 // The vector table.  Note that the proper constructs must be placed on this to ensure that it ends up at physical address 0x0000.0000.
 __attribute__ ((section(".isr_vector")))

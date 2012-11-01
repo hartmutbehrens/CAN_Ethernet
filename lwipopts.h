@@ -38,11 +38,11 @@
 // ---------- Stellaris / lwIP Port Options ----------
 //
 //*****************************************************************************
-#define HOST_TMR_INTERVAL               100         // default is 0
-#define DHCP_EXPIRE_TIMER_MSECS         (10 * 1000)
-#define INCLUDE_HTTPD_SSI
-#define INCLUDE_HTTPD_CGI
-#define DYNAMIC_HTTP_HEADERS
+//#define HOST_TMR_INTERVAL               100         // default is 0 NB: If enabled, calls function lwIPHostTimerHandler - could potentially conflict with other interrupts. Declare priorities?
+//#define DHCP_EXPIRE_TIMER_MSECS         (10 * 1000)
+//#define INCLUDE_HTTPD_SSI
+//#define INCLUDE_HTTPD_CGI
+//#define DYNAMIC_HTTP_HEADERS
 
 //*****************************************************************************
 //
@@ -61,7 +61,7 @@
 //*****************************************************************************
 //#define MEM_LIBC_MALLOC                 0
 #define MEM_ALIGNMENT                   4           // default is 1
-#define MEM_SIZE                        (12 * 1024)  // default is 1600
+#define MEM_SIZE                        (4 * 1024)  // default is 1600
 //#define MEMP_OVERFLOW_CHECK             0
 //#define MEMP_SANITY_CHECK               0
 //#define MEM_USE_POOLS                   0
@@ -72,12 +72,12 @@
 // ---------- Internal Memory Pool Sizes ----------
 //
 //*****************************************************************************
-#define MEMP_NUM_PBUF                     20  // Default 16
+//#define MEMP_NUM_PBUF                     20  // Default 16
 //#define MEMP_NUM_RAW_PCB                4
 //#define MEMP_NUM_UDP_PCB                4
-#define MEMP_NUM_TCP_PCB                  8  // Default 5
+//#define MEMP_NUM_TCP_PCB                  8  // Default 5
 //#define MEMP_NUM_TCP_PCB_LISTEN         8
-#define MEMP_NUM_TCP_SEG                  20  // Default 16
+//#define MEMP_NUM_TCP_SEG                  20  // Default 16
 //#define MEMP_NUM_REASSDATA              5
 //#define MEMP_NUM_ARP_QUEUE              30
 //#define MEMP_NUM_IGMP_GROUP             8
@@ -86,7 +86,7 @@
 //#define MEMP_NUM_NETCONN                4
 //#define MEMP_NUM_TCPIP_MSG_API          8
 //#define MEMP_NUM_TCPIP_MSG_INPKT        8
-#define PBUF_POOL_SIZE                   16
+#define PBUF_POOL_SIZE                   32		//default is 16
 
 //*****************************************************************************
 //
@@ -208,11 +208,11 @@
 //*****************************************************************************
 //#define LWIP_TCP                        1
 //#define TCP_TTL                         (IP_DEFAULT_TTL)
-#define TCP_WND                         2048    // default is 2048, was 4096
+#define TCP_WND                         4096    // default is 2048, was 4096
 //#define TCP_MAXRTX                      12
 //#define TCP_SYNMAXRTX                   6
 //#define TCP_QUEUE_OOSEQ                 1
-#define TCP_MSS                         512     // default is 128, was 1500
+#define TCP_MSS                         1500     // default is 128, was 1500
 //#define TCP_CALCULATE_EFF_SEND_MSS      1
 #define TCP_SND_BUF                     (6 * TCP_MSS)
                                                     // default is 256

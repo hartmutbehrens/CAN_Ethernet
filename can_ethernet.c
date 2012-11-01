@@ -56,18 +56,19 @@ void display_can_statistics(unsigned long msg_count, unsigned long lost_count, u
 // SYSTICK interrupt handler
 void SYSTICK_handler(void)
 {
-    HWREGBITW(&systick_flag, FLAG_SYSTICK) = 1;                               // Indicate that a SysTick interrupt has occurred.
+    HWREGBITW(&systick_flag, FLAG_SYSTICK) = 1;                        // Indicate that a SysTick interrupt has occurred.
+    //RIT128x96x4StringDraw(" Systick", 0, 24, 15);
     lwIPTimer(SYSTICKMS);                                                     // Call the lwIP timer handler.
 }
 
 
 // This function is required by lwIP library to support any host-related timer functions.
-void
-lwIPHostTimerHandler(void)
+void lwIPHostTimerHandler(void)
 {
+    /*
     static unsigned long ulLastIPAddress = 0;
     unsigned long ulIPAddress;
-
+    
     ulIPAddress = lwIPLocalIPAddrGet();
 
     //
@@ -120,6 +121,7 @@ lwIPHostTimerHandler(void)
         display_ip_address(ulIPAddress, 36, 32);
         RIT128x96x4Disable();
     }
+    */
 }
 
 
@@ -305,11 +307,11 @@ int main(void)
     {
         //print some info to the OLED
         //NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
-        //if (update_count >= UPDATE_RATE)
-        //{
+        if (update_count >= UPDATE_RATE)
+        {
             display_can_statistics(message_count,lost_message_count,5,70);
-          //  update_count = 0;                                   //reset the update count
-        //}
+            update_count = 0;                                   //reset the update count
+        }
     }
 
 }
