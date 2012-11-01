@@ -146,10 +146,6 @@ void CAN_handler(void)
     CANIntClear(CAN0_BASE, status);						                    // Acknowledge the CAN controller interrupt has been handled.
 }
 
-
-
-
-
 int main(void)
 {
     unsigned long user0, user1;                                         // variables to retrieve MAC address from flash
@@ -206,7 +202,7 @@ int main(void)
      
     CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;             //assign pointer to buffer that will hold message data
     CAN_data.bytes_remaining = CAN_FIFO_SIZE;                           // Set the total number of bytes expected.
-    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);                // Configure the receive message FIFO - this function should only be called once.
+    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.
     
 
     // loop forever
