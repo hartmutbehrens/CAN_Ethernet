@@ -16,6 +16,7 @@
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
 #include "can_ethernet.h"
+#include "can_conf.h"
 
 // A set of flags.  0 indicates that a SysTick interrupt has occurred - see SYSTICK_handler
 #define FLAG_SYSTICK 0
@@ -33,6 +34,7 @@ CAN_struct CAN_data;
 volatile unsigned long message_count = 0;		// received message count
 volatile unsigned long update_count = 0;		// print updates once this threshold is reached
 volatile unsigned long lost_message_count = 0;	// lost CAN message count
+volatile unsigned long ip_displayed = 0;        // only show IP message once
 static char print_buf[64];
 
 //display an lwIP address
@@ -42,7 +44,7 @@ void display_ip_address(unsigned long ipaddr, unsigned long col, unsigned long r
     unsigned char *temp = (unsigned char *)&ipaddr;
 
     // Convert the IP Address into a string for display purposes
-    usprintf(buffer, "%d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
+    usprintf(buffer, "IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
 
     // Display on OLED
     RIT128x96x4StringDraw(buffer, col, row, 15);
@@ -56,72 +58,37 @@ void display_can_statistics(unsigned long msg_count, unsigned long lost_count, u
 // SYSTICK interrupt handler
 void SYSTICK_handler(void)
 {
-    HWREGBITW(&systick_flag, FLAG_SYSTICK) = 1;                        // Indicate that a SysTick interrupt has occurred.
-    //RIT128x96x4StringDraw(" Systick", 0, 24, 15);
-    lwIPTimer(SYSTICKMS);                                                     // Call the lwIP timer handler.
+    //HWREGBITW(&systick_flag, FLAG_SYSTICK) = 1;                      // Indicate that a SysTick interrupt has occurred.
+    lwIPTimer(SYSTICKMS);                                            // Call the lwIP timer handler - eventually results in lwIPHostTimerHandler being called
 }
 
 
 // This function is required by lwIP library to support any host-related timer functions.
+// Define HOST_TMR_INTERVAL in lwipopts.h to use
 void lwIPHostTimerHandler(void)
 {
-    /*
+    
     static unsigned long ulLastIPAddress = 0;
     unsigned long ulIPAddress;
-    
     ulIPAddress = lwIPLocalIPAddrGet();
 
     //
     // If IP Address has not yet been assigned, update the display accordingly
     //
-    if(ulIPAddress == 0)
-    {
-        static int iColumn = 6;
-
-        //
-        // Update status bar on the display.
-        //
-        RIT128x96x4Enable(1000000);
-        if(iColumn < 12)
-        {
-            RIT128x96x4StringDraw(" >", 114, 24, 15);
-            RIT128x96x4StringDraw("< ", 0, 24, 15);
-            RIT128x96x4StringDraw("*",iColumn, 24, 7);
-        }
-        else
-        {
-            RIT128x96x4StringDraw(" *",iColumn - 6, 24, 7);
-        }
-
-        iColumn += 4;
-        if(iColumn > 114)
-        {
-            iColumn = 6;
-            RIT128x96x4StringDraw(" >", 114, 24, 15);
-        }
-        RIT128x96x4Disable();
-    }
-
-    //
-    // Check if IP address has changed, and display if it has.
-    //
-    else if(ulLastIPAddress != ulIPAddress)
+    if( (ulLastIPAddress != ulIPAddress) && (!ip_displayed) )
     {
         ulLastIPAddress = ulIPAddress;
-        RIT128x96x4Enable(1000000);
-        RIT128x96x4StringDraw("                       ", 0, 16, 15);
-        RIT128x96x4StringDraw("                       ", 0, 24, 15);
-        RIT128x96x4StringDraw("IP:   ", 0, 16, 15);
-        RIT128x96x4StringDraw("MASK: ", 0, 24, 15);
-        RIT128x96x4StringDraw("GW:   ", 0, 32, 15);
-        display_ip_address(ulIPAddress, 36, 16);
-        ulIPAddress = lwIPLocalNetMaskGet();
-        display_ip_address(ulIPAddress, 36, 24);
-        ulIPAddress = lwIPLocalGWAddrGet();
-        display_ip_address(ulIPAddress, 36, 32);
-        RIT128x96x4Disable();
+        //RIT128x96x4StringDraw("IP:   ", 0, 16, 15);
+        //RIT128x96x4StringDraw("MASK: ", 0, 24, 15);
+        //RIT128x96x4StringDraw("GW:   ", 0, 32, 15);
+        //display_ip_address(ulIPAddress, 0, 16);
+        //ulIPAddress = lwIPLocalNetMaskGet();
+        //display_ip_address(ulIPAddress, 36, 24);
+        //ulIPAddress = lwIPLocalGWAddrGet();
+        //display_ip_address(ulIPAddress, 36, 32);
+        ip_displayed = 1;
     }
-    */
+    
 }
 
 
@@ -250,7 +217,7 @@ int main(void)
     SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ);
     // Initialize the OLED display to run at 1MHz
     RIT128x96x4Init(1000000);    
-    
+    RIT128x96x4Enable(1000000);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_ETH);                          // Enable the Ethernet Controller.
     SysCtlPeripheralReset(SYSCTL_PERIPH_ETH);                           // Reset the Ethernet Controller.
 
@@ -287,6 +254,8 @@ int main(void)
 
     // Initialze the lwIP library, using DHCP.
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);
+
+    can_configure();
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);                        // Configure CAN 0 Pins.
     GPIOPinTypeCAN(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1);           // Configure CAN 0 Pins.

@@ -1,9 +1,9 @@
 #ifndef __CAN_ETHERNET_H
 #define __CAN_ETHERNET_H
 
-#define CAN_FIFO_SIZE   (8 * 8)              // size of FIFO buffers allocated to the CAN controller - 8 messages can each hold a max of 8 bytes
-#define CAN_BITRATE  1000000                 // set CAN bitrate to 1Mbps
-#define UPDATE_RATE 1                        // update rate of CAN message count to OLED
+#define CAN_FIFO_SIZE   (8 * 8)             // size of FIFO buffers allocated to the CAN controller - 8 messages can each hold a max of 8 bytes
+#define CAN_BITRATE 1000000                 // set CAN bitrate to 1Mbps
+#define UPDATE_RATE 1000                    // update rate of CAN message count to OLED
 
 #ifndef DHCP_EXPIRE_TIMER_SECS
 #define DHCP_EXPIRE_TIMER_SECS 45			// Timeout for DHCP address request
