@@ -2,7 +2,6 @@
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
 #include "driverlib/sysctl.h"
-#include "driverlib/systick.h"
 #include "utils/lwiplib.h"
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
@@ -13,12 +12,6 @@
 // A set of flags.  0 indicates that a SysTick interrupt has occurred - see SYSTICK_handler
 #define FLAG_SYSTICK 0
 static volatile unsigned long systick_flag;
-
-// Defines for setting up the system clock.
-#define SYSTICKHZ               100
-#define SYSTICKMS               (1000 / SYSTICKHZ)
-#define SYSTICKUS               (1000000 / SYSTICKHZ)
-#define SYSTICKNS               (1000000000 / SYSTICKHZ)
 
 extern CAN_struct CAN_data;                            // structure to hold CAN RX and TX data
 extern volatile unsigned long message_count;		   // CAN received message count
@@ -44,20 +37,12 @@ void display_can_statistics(unsigned long msg_count, unsigned long lost_count, u
     usprintf(print_buf, "%u / %u  ", lost_count, msg_count);
     RIT128x96x4StringDraw(print_buf, col, row, 15);
 }
-// SYSTICK interrupt handler
-void SYSTICK_handler(void)
-{
-    //HWREGBITW(&systick_flag, FLAG_SYSTICK) = 1;                    // Indicate that a SysTick interrupt has occurred.
-    lwIPTimer(SYSTICKMS);                                            // Call the lwIP timer handler - eventually results in lwIPHostTimerHandler being called
-}
+
 
 int main(void)
 {
     
-    
-	
-    // If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.  This is a workaround to allow the PLL to operate reliably.
-    if(REVISION_IS_A2)
+    if(REVISION_IS_A2)                                                  // If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.  This is a workaround to allow the PLL to operate reliably.
     {
         SysCtlLDOSet(SYSCTL_LDO_2_75V);
     }
@@ -69,10 +54,6 @@ int main(void)
 
     Eth_configure();
     
-    SysTickPeriodSet(SysCtlClockGet() / SYSTICKUS);                     // Configure SysTick for a periodic interrupt. Used by lwIP. 
-    SysTickEnable();                                                    // TODO: investigate why SYSTICKNS doesn't seem to work
-    SysTickIntEnable();
-
     // IntMasterEnable();                                               // Enable processor interrupts.
     unsigned char mac_address[8];                                       // buffer to hold MAC address
     get_MAC_address(mac_address);
@@ -90,7 +71,7 @@ int main(void)
         if (update_count >= UPDATE_RATE)
         {
             display_can_statistics(message_count,lost_message_count,5,70);
-            update_count = 0;                                   //reset the update count
+            update_count = 0;                                   // reset the update count
         }
     }
 

@@ -5,6 +5,7 @@
 #include "driverlib/flash.h"
 #include "driverlib/gpio.h"
 #include "driverlib/sysctl.h"
+#include "driverlib/systick.h"
 #include "utils/lwiplib.h"
 #include "eth_conf.h"
 
@@ -17,6 +18,10 @@ void Eth_configure(void)
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);                        // Enable Port F for Ethernet LEDs.
     GPIOPinTypeEthernetLED(GPIO_PORTF_BASE, GPIO_PIN_2 | GPIO_PIN_3);   // LED0-Bit 3-Output and LED1-Bit 2-Output
+
+    SysTickPeriodSet(SysCtlClockGet() / SYSTICKUS);                     // Configure SysTick for a periodic interrupt. Used by lwIP. 
+    SysTickEnable();                                                    // TODO: investigate why SYSTICKNS doesn't seem to work
+    SysTickIntEnable();
 }
 
 
@@ -38,6 +43,13 @@ void get_MAC_address(unsigned char *mac_address)						// Configure the hardware 
     mac_address[3] = ((user1 >>  0) & 0xff);
     mac_address[4] = ((user1 >>  8) & 0xff);
     mac_address[5] = ((user1 >> 16) & 0xff);
+}
+
+
+void SYSTICK_handler(void)												// SYSTICK interrupt handler
+{
+    //HWREGBITW(&systick_flag, FLAG_SYSTICK) = 1;                    	// Indicate that a SysTick interrupt has occurred.
+    lwIPTimer(SYSTICKMS);                                            	// Call the lwIP timer handler - eventually results in lwIPHostTimerHandler being called
 }
 
 void lwIPHostTimerHandler(void)											// This function is required by lwIP library to support any host-related timer functions.
