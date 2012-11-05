@@ -87,6 +87,7 @@ ${COMPILER}:
 #
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/can_ethernet.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/can_conf.o
+${COMPILER}/can_ethernet.axf: ${COMPILER}/eth_conf.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/rit128x96x4.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/startup_${COMPILER}.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/lwiplib.o

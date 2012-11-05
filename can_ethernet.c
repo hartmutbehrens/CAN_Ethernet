@@ -1,15 +1,8 @@
 
 #include "inc/hw_ints.h"
-#include "inc/hw_memmap.h"
 #include "inc/hw_sysctl.h"
-#include "inc/hw_can.h"
-#include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
-#include "driverlib/can.h"
-#include "driverlib/ethernet.h"
 #include "driverlib/flash.h"
-#include "driverlib/gpio.h"
-#include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"
 #include "utils/lwiplib.h"
@@ -17,6 +10,7 @@
 #include "drivers/rit128x96x4.h"
 #include "can_ethernet.h"
 #include "can_conf.h"
+#include "eth_conf.h"
 
 // A set of flags.  0 indicates that a SysTick interrupt has occurred - see SYSTICK_handler
 #define FLAG_SYSTICK 0
@@ -105,12 +99,9 @@ int main(void)
     // Initialize the OLED display to run at 1MHz
     RIT128x96x4Init(1000000);    
     RIT128x96x4Enable(1000000);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_ETH);                          // Enable the Ethernet Controller.
-    SysCtlPeripheralReset(SYSCTL_PERIPH_ETH);                           // Reset the Ethernet Controller.
 
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);                        // Enable Port F for Ethernet LEDs.
-    GPIOPinTypeEthernetLED(GPIO_PORTF_BASE, GPIO_PIN_2 | GPIO_PIN_3);   // LED0-Bit 3-Output and LED1-Bit 2-Output
-
+    Eth_configure();
+    
     SysTickPeriodSet(SysCtlClockGet() / SYSTICKHZ);                     // Configure SysTick for a periodic interrupt.
     SysTickEnable();
     SysTickIntEnable();

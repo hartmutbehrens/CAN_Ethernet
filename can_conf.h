@@ -1,5 +1,7 @@
 #ifndef __CAN_CONF_H__
 #define __CAN_CONF_H__
+#include "inc/hw_types.h"
+#include "driverlib/can.h"
 
 #define CAN_FIFO_SIZE   (8 * 8)             // size of FIFO buffers allocated to the CAN controller - 8 messages can each hold a max of 8 bytes
 #define CAN_BITRATE 1000000                 // set CAN bitrate to 1Mbps
