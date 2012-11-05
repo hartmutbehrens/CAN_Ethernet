@@ -28,13 +28,11 @@ static volatile unsigned long systick_flag;
 #define SYSTICKUS               (1000000 / SYSTICKHZ)
 #define SYSTICKNS               (1000000000 / SYSTICKHZ)
 
-//structure to hold CAN RX and TX data
-CAN_struct CAN_data;
-
-volatile unsigned long message_count = 0;		// received message count
-volatile unsigned long update_count = 0;		// print updates once this threshold is reached
-volatile unsigned long lost_message_count = 0;	// lost CAN message count
-volatile unsigned long ip_displayed = 0;        // only show IP message once
+extern CAN_struct CAN_data;                            // structure to hold CAN RX and TX data
+extern volatile unsigned long message_count;		   // CAN received message count
+extern volatile unsigned long update_count;		       // print CAN updates once this threshold is reached
+extern volatile unsigned long lost_message_count;	   // lost CAN message count
+volatile unsigned long ip_displayed = 0;               // only show IP message once
 static char print_buf[64];
 
 //display an lwIP address
@@ -92,60 +90,6 @@ void lwIPHostTimerHandler(void)
 }
 
 
-// CAN controller interrupt handler.
-void CAN_handler(void)
-{
-    unsigned long status;
-    status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, 
- 	
-    if(status <= 8)                                                           // The first eight message objects make up the Transmit message FIFO.
-    {
-    	CAN_data.bytes_transmitted += 8;	                                  // Increment the number of bytes transmitted.
-    }
-    else if((status > 8) && (status <= 16))                                   // The second eight message objects make up the Receive message FIFO.
-    {
-    	message_count += 1;
-    	update_count += 1;
-        CANMessageGet(CAN0_BASE, status, &CAN_data.rx_msg_object, 1);         // Read the data out and acknowledge that it was read.
-
-        if(CAN_data.rx_msg_object.ulFlags & MSG_OBJ_DATA_LOST)			       // Check to see if there is an indication that some messages were lost.
-        {
-            lost_message_count += 1;
-        }
-        //display_can_statistics(message_count,lost_message_count,5,70);
-        /*
-        for (int i=0;i<8;i++)
-        {
-            //ETH_struct.rx_buffer = CAN_data.rx_msg_object.pucMsgData;
-            //ETH_struct.rx_buffer++;                                         // move pointer to next mem location to be assigned
-            //CAN_data.rx_msg_object.pucMsgData++;                          // move pointer to next mem location to be read
-            //CAN_data.bytes_remaining--;                                   // Decrement the expected bytes remaining.
-        }
-        for (int i=0;i<8;i++)
-        {
-            usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
-                CAN_data.rx_buffer[i*8+0],CAN_data.rx_buffer[i*8+1],CAN_data.rx_buffer[i*8+2],CAN_data.rx_buffer[i*8+3],
-                CAN_data.rx_buffer[i*8+4],CAN_data.rx_buffer[i*8+5],CAN_data.rx_buffer[i*8+6],CAN_data.rx_buffer[i*8+7]);
-            RIT128x96x4StringDraw(print_buf, 5, 0+i*10, 15);    
-        }
-        */
-
-        CAN_data.rx_msg_object.pucMsgData += 8;		                    // Advance the read pointer.
-        CAN_data.bytes_remaining -= 8;				                    // Decrement the expected bytes remaining.
-        //avoid memory filling up
-        if(CAN_data.bytes_remaining == 0)
-    	{
-    		CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;	    // re-assign pointer to buffer that will hold message data
-    		CAN_data.bytes_remaining = CAN_FIFO_SIZE;					    // reset number of bytes expected
-    	}
-    }
-    else
-    {
-        CANStatusGet(CAN0_BASE, CAN_STS_CONTROL);		                    // status interrupt so read the current status to clear the interrupt
-    }
-    CANIntClear(CAN0_BASE, status);						                    // Acknowledge the CAN controller interrupt has been handled.
-}
-
 int main(void)
 {
     unsigned long user0, user1;                                         // variables to retrieve MAC address from flash
@@ -198,11 +142,8 @@ int main(void)
     // Initialze the lwIP library, using DHCP.
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);
 
-    CAN_configure();
-     
-    CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;             //assign pointer to buffer that will hold message data
-    CAN_data.bytes_remaining = CAN_FIFO_SIZE;                           // Set the total number of bytes expected.
-    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.
+    CAN_configure();                                                    // Enable the board for CAN processing
+    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.    
     
 
     // loop forever

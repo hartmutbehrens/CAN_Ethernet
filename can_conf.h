@@ -16,6 +16,7 @@ typedef struct
     unsigned long bytes_transmitted;
 } CAN_struct;								// structure to hold CAN RX and TX data
 
+void CAN_handler(void);
 void CAN_configure(void);
 int CAN_receive_FIFO(unsigned char *data, unsigned long rx_size, CAN_struct *CAN_data);
 

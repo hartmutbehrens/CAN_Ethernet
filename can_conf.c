@@ -9,7 +9,69 @@
 #include "driverlib/systick.h"
 #include "can_conf.h"
 
-void CAN_configure(void)
+
+CAN_struct CAN_data;                                                         // structure to hold CAN RX and TX data
+volatile unsigned long message_count = 0;                                    // CAN received message count
+volatile unsigned long update_count = 0;                                     // print CAN updates once this threshold is reached
+volatile unsigned long lost_message_count = 0;                               // lost CAN message count
+
+
+// CAN controller interrupt handler.
+void CAN_handler(void)
+{
+    unsigned long status;
+    status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, 
+    
+    if(status <= 8)                                                           // The first eight message objects make up the Transmit message FIFO.
+    {
+        CAN_data.bytes_transmitted += 8;                                      // Increment the number of bytes transmitted.
+    }
+    else if((status > 8) && (status <= 16))                                   // The second eight message objects make up the Receive message FIFO.
+    {
+        message_count += 1;
+        update_count += 1;
+        CANMessageGet(CAN0_BASE, status, &CAN_data.rx_msg_object, 1);         // Read the data out and acknowledge that it was read.
+
+        if(CAN_data.rx_msg_object.ulFlags & MSG_OBJ_DATA_LOST)                 // Check to see if there is an indication that some messages were lost.
+        {
+            lost_message_count += 1;
+        }
+        //display_can_statistics(message_count,lost_message_count,5,70);
+        /*
+        for (int i=0;i<8;i++)
+        {
+            //ETH_struct.rx_buffer = CAN_data.rx_msg_object.pucMsgData;
+            //ETH_struct.rx_buffer++;                                         // move pointer to next mem location to be assigned
+            //CAN_data.rx_msg_object.pucMsgData++;                            // move pointer to next mem location to be read
+            //CAN_data.bytes_remaining--;                                     // Decrement the expected bytes remaining.
+        }
+        for (int i=0;i<8;i++)
+        {
+            usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
+                CAN_data.rx_buffer[i*8+0],CAN_data.rx_buffer[i*8+1],CAN_data.rx_buffer[i*8+2],CAN_data.rx_buffer[i*8+3],
+                CAN_data.rx_buffer[i*8+4],CAN_data.rx_buffer[i*8+5],CAN_data.rx_buffer[i*8+6],CAN_data.rx_buffer[i*8+7]);
+            RIT128x96x4StringDraw(print_buf, 5, 0+i*10, 15);    
+        }
+        */
+
+        CAN_data.rx_msg_object.pucMsgData += 8;                         // Advance the read pointer.
+        CAN_data.bytes_remaining -= 8;                                  // Decrement the expected bytes remaining.
+        //avoid memory filling up
+        if(CAN_data.bytes_remaining == 0)
+        {
+            CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;     // re-assign pointer to buffer that will hold message data
+            CAN_data.bytes_remaining = CAN_FIFO_SIZE;                       // reset number of bytes expected
+        }
+    }
+    else
+    {
+        CANStatusGet(CAN0_BASE, CAN_STS_CONTROL);                           // status interrupt so read the current status to clear the interrupt
+    }
+    CANIntClear(CAN0_BASE, status);                                         // Acknowledge the CAN controller interrupt has been handled.
+}
+
+
+void CAN_configure(void)                                                // Enable the board for CAN processing
 {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);                        // Configure CAN 0 Pins.
     GPIOPinTypeCAN(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1);           // Configure CAN 0 Pins.
@@ -18,7 +80,10 @@ void CAN_configure(void)
     CANBitRateSet(CAN0_BASE, 8000000, CAN_BITRATE);                     // Configure the clock rate to the CAN controller at 8MHz and bit rate for the CAN device to CAN_BITRATE
     CANIntEnable(CAN0_BASE, CAN_INT_MASTER | CAN_INT_ERROR);            // Enable interrupts from CAN controller.
     IntEnable(INT_CAN0);                                                // Enable interrupts for the CAN in the NVIC.
-    CANEnable(CAN0_BASE);                                               // Take the CAN0 device out of INIT state.    
+    CANEnable(CAN0_BASE);                                               // Take the CAN0 device out of INIT state.
+
+    CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;             // assign pointer to buffer that will hold message data
+    CAN_data.bytes_remaining = CAN_FIFO_SIZE;                           // Set the total number of bytes expected.
 }
 
 // This function configures the receive FIFO and should only be called once.
