@@ -1,8 +1,6 @@
-
 #include "inc/hw_ints.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
-#include "driverlib/flash.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"
 #include "utils/lwiplib.h"
@@ -26,7 +24,6 @@ extern CAN_struct CAN_data;                            // structure to hold CAN 
 extern volatile unsigned long message_count;		   // CAN received message count
 extern volatile unsigned long update_count;		       // print CAN updates once this threshold is reached
 extern volatile unsigned long lost_message_count;	   // lost CAN message count
-volatile unsigned long ip_displayed = 0;               // only show IP message once
 static char print_buf[64];
 
 //display an lwIP address
@@ -50,44 +47,14 @@ void display_can_statistics(unsigned long msg_count, unsigned long lost_count, u
 // SYSTICK interrupt handler
 void SYSTICK_handler(void)
 {
-    //HWREGBITW(&systick_flag, FLAG_SYSTICK) = 1;                      // Indicate that a SysTick interrupt has occurred.
+    //HWREGBITW(&systick_flag, FLAG_SYSTICK) = 1;                    // Indicate that a SysTick interrupt has occurred.
     lwIPTimer(SYSTICKMS);                                            // Call the lwIP timer handler - eventually results in lwIPHostTimerHandler being called
 }
 
-
-// This function is required by lwIP library to support any host-related timer functions.
-// Define HOST_TMR_INTERVAL in lwipopts.h to use
-void lwIPHostTimerHandler(void)
-{
-    
-    static unsigned long ulLastIPAddress = 0;
-    unsigned long ulIPAddress;
-    ulIPAddress = lwIPLocalIPAddrGet();
-
-    //
-    // If IP Address has not yet been assigned, update the display accordingly
-    //
-    if( (ulLastIPAddress != ulIPAddress) && (!ip_displayed) )
-    {
-        ulLastIPAddress = ulIPAddress;
-        //RIT128x96x4StringDraw("IP:   ", 0, 16, 15);
-        //RIT128x96x4StringDraw("MASK: ", 0, 24, 15);
-        //RIT128x96x4StringDraw("GW:   ", 0, 32, 15);
-        //display_ip_address(ulIPAddress, 0, 16);
-        //ulIPAddress = lwIPLocalNetMaskGet();
-        //display_ip_address(ulIPAddress, 36, 24);
-        //ulIPAddress = lwIPLocalGWAddrGet();
-        //display_ip_address(ulIPAddress, 36, 32);
-        ip_displayed = 1;
-    }
-    
-}
-
-
 int main(void)
 {
-    unsigned long user0, user1;                                         // variables to retrieve MAC address from flash
-    unsigned char mac_address[8];                                       // buffer to hold MAC address
+    
+    
 	
     // If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.  This is a workaround to allow the PLL to operate reliably.
     if(REVISION_IS_A2)
@@ -102,36 +69,14 @@ int main(void)
 
     Eth_configure();
     
-    SysTickPeriodSet(SysCtlClockGet() / SYSTICKHZ);                     // Configure SysTick for a periodic interrupt.
-    SysTickEnable();
+    SysTickPeriodSet(SysCtlClockGet() / SYSTICKUS);                     // Configure SysTick for a periodic interrupt. Used by lwIP. 
+    SysTickEnable();                                                    // TODO: investigate why SYSTICKNS doesn't seem to work
     SysTickIntEnable();
 
-    // IntMasterEnable();                                                  // Enable processor interrupts.
-
-    // Configure the hardware MAC address for Ethernet Controller filtering of incoming packets.
-    // MAC address is stored in the non-volatile USER0 and USER1 registers. Read using the FlashUserGet function.
-    FlashUserGet(&user0, &user1);
-    if((user0 == 0xffffffff) || (user1 == 0xffffffff))
-    {
-        // We should never get here.  This is an error if the MAC address has not been programmed into the device.  Exit the program.
-        RIT128x96x4StringDraw("MAC Address", 0, 16, 15);
-        RIT128x96x4StringDraw("Not Programmed!", 0, 24, 15);
-        while(1);
-    }
-
-    
-    // Convert the 24/24 split MAC address from NV ram into a 32/16 split
-    // MAC address needed to program the hardware registers, then program
-    // the MAC address into the Ethernet Controller registers.
-    mac_address[0] = ((user0 >>  0) & 0xff);
-    mac_address[1] = ((user0 >>  8) & 0xff);
-    mac_address[2] = ((user0 >> 16) & 0xff);
-    mac_address[3] = ((user1 >>  0) & 0xff);
-    mac_address[4] = ((user1 >>  8) & 0xff);
-    mac_address[5] = ((user1 >> 16) & 0xff);
-
-    // Initialze the lwIP library, using DHCP.
-    lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);
+    // IntMasterEnable();                                               // Enable processor interrupts.
+    unsigned char mac_address[8];                                       // buffer to hold MAC address
+    get_MAC_address(mac_address);
+    lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
 
     CAN_configure();                                                    // Enable the board for CAN processing
     CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.    
