@@ -10,6 +10,7 @@
 #include "eth_conf.h"
 
 volatile unsigned long ip_displayed = 0;              					// only show IP message once
+static volatile unsigned long systick_flag;								// flag for indicating that a SysTick has occured
 
 void Eth_configure(void)
 {

@@ -1,6 +1,8 @@
 #ifndef __ETH_CONF_H__
 #define __ETH_CONF_H__
 
+// A set of flags.  0 indicates that a SysTick interrupt has occurred - see SYSTICK_handler
+#define FLAG_SYSTICK 0
 // Defines for setting up the system clock.
 #define SYSTICKHZ               100
 #define SYSTICKMS               (1000 / SYSTICKHZ)

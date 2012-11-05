@@ -9,10 +9,6 @@
 #include "can_conf.h"
 #include "eth_conf.h"
 
-// A set of flags.  0 indicates that a SysTick interrupt has occurred - see SYSTICK_handler
-#define FLAG_SYSTICK 0
-static volatile unsigned long systick_flag;
-
 extern CAN_struct CAN_data;                            // structure to hold CAN RX and TX data
 extern volatile unsigned long message_count;		   // CAN received message count
 extern volatile unsigned long update_count;		       // print CAN updates once this threshold is reached
@@ -62,9 +58,7 @@ int main(void)
     CAN_configure();                                                    // Enable the board for CAN processing
     CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.    
     
-
-    // loop forever
-    while (1) 
+    while (1)                                                           // loop forever
     {
         //print some info to the OLED
         //NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
