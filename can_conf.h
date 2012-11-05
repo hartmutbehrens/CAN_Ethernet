@@ -1,5 +1,5 @@
-#ifndef __CAN_CONF_H__
-#define __CAN_CONF_H__
+#ifndef __C2E_CAN_CONF_H__
+#define __C2E_CAN_CONF_H__
 #include "inc/hw_types.h"
 #include "driverlib/can.h"
 

@@ -1,5 +1,5 @@
-#ifndef __CAN_ETHERNET_H
-#define __CAN_ETHERNET_H
+#ifndef __C2E_CAN_ETHERNET_H
+#define __C2E_CAN_ETHERNET_H
 
 
 #define UPDATE_RATE 1000                    // update rate of CAN message count to OLED

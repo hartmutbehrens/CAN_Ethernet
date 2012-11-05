@@ -1,5 +1,5 @@
-#ifndef __ETH_CONF_H__
-#define __ETH_CONF_H__
+#ifndef __C2E_ETH_CONF_H__
+#define __C2E_ETH_CONF_H__
 
 // A set of flags.  0 indicates that a SysTick interrupt has occurred - see SYSTICK_handler
 #define FLAG_SYSTICK 0
