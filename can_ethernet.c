@@ -10,10 +10,6 @@
 #include "eth_conf.h"
 
 extern CAN_struct CAN_data;                            // structure to hold CAN RX and TX data
-extern volatile unsigned long message_count;		   // CAN received message count
-extern volatile unsigned long update_count;		       // print CAN updates once this threshold is reached
-extern volatile unsigned long lost_message_count;	   // lost CAN message count
-static char print_buf[64];
 
 //display an lwIP address
 void display_ip_address(unsigned long ipaddr, unsigned long col, unsigned long row)
@@ -26,12 +22,6 @@ void display_ip_address(unsigned long ipaddr, unsigned long col, unsigned long r
 
     // Display on OLED
     RIT128x96x4StringDraw(buffer, col, row, 15);
-}
-
-void display_can_statistics(unsigned long msg_count, unsigned long lost_count, unsigned long col, unsigned long row)
-{
-    usprintf(print_buf, "%u / %u  ", lost_count, msg_count);
-    RIT128x96x4StringDraw(print_buf, col, row, 15);
 }
 
 
@@ -60,13 +50,7 @@ int main(void)
     
     while (1)                                                           // loop forever
     {
-        //print some info to the OLED
-        //NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
-        if (update_count >= UPDATE_RATE)
-        {
-            display_can_statistics(message_count,lost_message_count,5,70);
-            update_count = 0;                                   // reset the update count
-        }
+        // display_CAN_statistics(5,80);                                   // print some info to the OLED NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
     }
 
 }

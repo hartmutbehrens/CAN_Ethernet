@@ -4,6 +4,10 @@
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
+
+#include "utils/ustdlib.h"
+#include "drivers/rit128x96x4.h"
+
 #include "can_conf.h"
 
 
@@ -11,13 +15,26 @@ CAN_struct CAN_data;                                                         // 
 volatile unsigned long message_count = 0;                                    // CAN received message count
 volatile unsigned long update_count = 0;                                     // print CAN updates once this threshold is reached
 volatile unsigned long lost_message_count = 0;                               // lost CAN message count
+static char print_buf[64];
+
+void display_CAN_statistics(unsigned long col, unsigned long row)
+{
+    // usprintf(print_buf, "%u / %u  ", UPDATE_RATE, update_count);
+    // RIT128x96x4StringDraw(print_buf, 5, 10, 15);
+    if (update_count >= UPDATE_RATE)
+    {
+        usprintf(print_buf, "%u / %u  ", lost_message_count, message_count);
+        RIT128x96x4StringDraw(print_buf, col, row, 15);
+        update_count = 0;                                   // reset the update count
+    } 
+}
 
 
 // CAN controller interrupt handler.
 void CAN_handler(void)
 {
     unsigned long status;
-    status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, 
+    status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority
     
     if(status <= 8)                                                           // The first eight message objects make up the Transmit message FIFO.
     {
@@ -29,42 +46,46 @@ void CAN_handler(void)
         update_count += 1;
         CANMessageGet(CAN0_BASE, status, &CAN_data.rx_msg_object, 1);         // Read the data out and acknowledge that it was read.
 
-        if(CAN_data.rx_msg_object.ulFlags & MSG_OBJ_DATA_LOST)                 // Check to see if there is an indication that some messages were lost.
+        if(CAN_data.rx_msg_object.ulFlags & MSG_OBJ_DATA_LOST)                // Check to see if there is an indication that some messages were lost.
         {
             lost_message_count += 1;
         }
-        //display_can_statistics(message_count,lost_message_count,5,70);
+        int i = status-9;
+        usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
+            CAN_data.rx_msg_object.pucMsgData[i*8+0],CAN_data.rx_msg_object.pucMsgData[i*8+1],CAN_data.rx_msg_object.pucMsgData[i*8+2],CAN_data.rx_msg_object.pucMsgData[i*8+3],
+            CAN_data.rx_msg_object.pucMsgData[i*8+4],CAN_data.rx_msg_object.pucMsgData[i*8+5],CAN_data.rx_msg_object.pucMsgData[i*8+6],CAN_data.rx_msg_object.pucMsgData[i*8+7]);
+        RIT128x96x4StringDraw(print_buf, 10, 10, 15);    
+        
         /*
         for (int i=0;i<8;i++)
         {
-            //ETH_struct.rx_buffer = CAN_data.rx_msg_object.pucMsgData;
-            //ETH_struct.rx_buffer++;                                         // move pointer to next mem location to be assigned
-            //CAN_data.rx_msg_object.pucMsgData++;                            // move pointer to next mem location to be read
-            //CAN_data.bytes_remaining--;                                     // Decrement the expected bytes remaining.
-        }
-        for (int i=0;i<8;i++)
-        {
-            usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
-                CAN_data.rx_buffer[i*8+0],CAN_data.rx_buffer[i*8+1],CAN_data.rx_buffer[i*8+2],CAN_data.rx_buffer[i*8+3],
-                CAN_data.rx_buffer[i*8+4],CAN_data.rx_buffer[i*8+5],CAN_data.rx_buffer[i*8+6],CAN_data.rx_buffer[i*8+7]);
+           // usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
+           //    CAN_data.rx_buffer[i*8+0],CAN_data.rx_buffer[i*8+1],CAN_data.rx_buffer[i*8+2],CAN_data.rx_buffer[i*8+3],
+           //     CAN_data.rx_buffer[i*8+4],CAN_data.rx_buffer[i*8+5],CAN_data.rx_buffer[i*8+6],CAN_data.rx_buffer[i*8+7]);
+           //  usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
+           //    CAN_data.rx_msg_object.pucMsgData[i*8+0],CAN_data.rx_msg_object.pucMsgData[i*8+1],CAN_data.rx_msg_object.pucMsgData[i*8+2],CAN_data.rx_msg_object.pucMsgData[i*8+3],
+           //     CAN_data.rx_msg_object.pucMsgData[i*8+4],CAN_data.rx_msg_object.pucMsgData[i*8+5],CAN_data.rx_msg_object.pucMsgData[i*8+6],CAN_data.rx_msg_object.pucMsgData[i*8+7]);
             RIT128x96x4StringDraw(print_buf, 5, 0+i*10, 15);    
         }
         */
+        //RIT128x96x4Clear();
+        //RIT128x96x4Disable();
+        
 
-        CAN_data.rx_msg_object.pucMsgData += 8;                         // Advance the read pointer.
-        CAN_data.bytes_remaining -= 8;                                  // Decrement the expected bytes remaining.
+        CAN_data.rx_msg_object.pucMsgData += 8;                               // Advance the read pointer.
+        CAN_data.bytes_remaining -= 8;                                        // Decrement the expected bytes remaining.
         //avoid memory filling up
         if(CAN_data.bytes_remaining == 0)
         {
             CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;     // re-assign pointer to buffer that will hold message data
-            CAN_data.bytes_remaining = CAN_FIFO_SIZE;                       // reset number of bytes expected
+            CAN_data.bytes_remaining = CAN_FIFO_SIZE;                   // reset number of bytes expected
         }
     }
     else
     {
-        CANStatusGet(CAN0_BASE, CAN_STS_CONTROL);                           // status interrupt so read the current status to clear the interrupt
+        CANStatusGet(CAN0_BASE, CAN_STS_CONTROL);                       // status interrupt so read the current status to clear the interrupt
     }
-    CANIntClear(CAN0_BASE, status);                                         // Acknowledge the CAN controller interrupt has been handled.
+    CANIntClear(CAN0_BASE, status);                                     // Acknowledge the CAN controller interrupt has been handled.
 }
 
 
