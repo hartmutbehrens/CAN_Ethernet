@@ -50,35 +50,19 @@ void CAN_handler(void)
         {
             lost_message_count += 1;
         }
-        int i = status-9;
-        usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
-            CAN_data.rx_msg_object.pucMsgData[i*8+0],CAN_data.rx_msg_object.pucMsgData[i*8+1],CAN_data.rx_msg_object.pucMsgData[i*8+2],CAN_data.rx_msg_object.pucMsgData[i*8+3],
-            CAN_data.rx_msg_object.pucMsgData[i*8+4],CAN_data.rx_msg_object.pucMsgData[i*8+5],CAN_data.rx_msg_object.pucMsgData[i*8+6],CAN_data.rx_msg_object.pucMsgData[i*8+7]);
-        RIT128x96x4StringDraw(print_buf, 10, 10, 15);    
-        
-        /*
-        for (int i=0;i<8;i++)
-        {
-           // usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
-           //    CAN_data.rx_buffer[i*8+0],CAN_data.rx_buffer[i*8+1],CAN_data.rx_buffer[i*8+2],CAN_data.rx_buffer[i*8+3],
-           //     CAN_data.rx_buffer[i*8+4],CAN_data.rx_buffer[i*8+5],CAN_data.rx_buffer[i*8+6],CAN_data.rx_buffer[i*8+7]);
-           //  usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
-           //    CAN_data.rx_msg_object.pucMsgData[i*8+0],CAN_data.rx_msg_object.pucMsgData[i*8+1],CAN_data.rx_msg_object.pucMsgData[i*8+2],CAN_data.rx_msg_object.pucMsgData[i*8+3],
-           //     CAN_data.rx_msg_object.pucMsgData[i*8+4],CAN_data.rx_msg_object.pucMsgData[i*8+5],CAN_data.rx_msg_object.pucMsgData[i*8+6],CAN_data.rx_msg_object.pucMsgData[i*8+7]);
-            RIT128x96x4StringDraw(print_buf, 5, 0+i*10, 15);    
-        }
-        */
-        //RIT128x96x4Clear();
-        //RIT128x96x4Disable();
-        
+        //int i = status-9;                                                   // index into buffer to locate receive data
+        //usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
+        //    CAN_data.rx_msg_object.pucMsgData[i*8+0],CAN_data.rx_msg_object.pucMsgData[i*8+1],CAN_data.rx_msg_object.pucMsgData[i*8+2],CAN_data.rx_msg_object.pucMsgData[i*8+3],
+        //    CAN_data.rx_msg_object.pucMsgData[i*8+4],CAN_data.rx_msg_object.pucMsgData[i*8+5],CAN_data.rx_msg_object.pucMsgData[i*8+6],CAN_data.rx_msg_object.pucMsgData[i*8+7]);
+        //RIT128x96x4StringDraw(print_buf, 10, 10, 15);    
 
         CAN_data.rx_msg_object.pucMsgData += 8;                               // Advance the read pointer.
         CAN_data.bytes_remaining -= 8;                                        // Decrement the expected bytes remaining.
-        //avoid memory filling up
-        if(CAN_data.bytes_remaining == 0)
+        
+        if(CAN_data.bytes_remaining == 0)                                     // this is to avoid memory filling up
         {
-            CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;     // re-assign pointer to buffer that will hold message data
-            CAN_data.bytes_remaining = CAN_FIFO_SIZE;                   // reset number of bytes expected
+            CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;           // re-assign pointer to buffer that will hold message data - seems to be necessary to prevent lock-up (presumably due to memory fillup?)
+            CAN_data.bytes_remaining = CAN_FIFO_SIZE;                         // reset number of bytes expected
         }
     }
     else

@@ -37,6 +37,7 @@ int main(void)
     // Initialize the OLED display to run at 1MHz
     RIT128x96x4Init(1000000);    
     RIT128x96x4Enable(1000000);
+    RIT128x96x4StringDraw("CAN2ETH", 10, 10, 15);                       // Say Hello
 
     Eth_configure();
     
