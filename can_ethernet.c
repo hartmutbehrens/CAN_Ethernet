@@ -7,7 +7,7 @@
 #include "drivers/rit128x96x4.h"
 #include "can_ethernet.h"
 #include "c2e_can.h"
-#include "eth_conf.h"
+#include "c2e_eth.h"
 
 extern CAN_struct CAN_data;                            // structure to hold CAN RX and TX data
 
