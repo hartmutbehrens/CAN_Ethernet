@@ -51,7 +51,7 @@ int main(void)
     
     while (1)                                                           // loop forever
     {
-        // display_CAN_statistics(5,80);                                   // print some info to the OLED NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
+        display_CAN_statistics(1,5,80);                                   // print some info to the OLED NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
     }
 
 }

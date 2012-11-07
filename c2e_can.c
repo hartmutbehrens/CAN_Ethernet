@@ -17,11 +17,11 @@ volatile unsigned long update_count = 0;                                     // 
 volatile unsigned long lost_message_count = 0;                               // lost CAN message count
 static char print_buf[64];
 
-void display_CAN_statistics(unsigned long col, unsigned long row)
+void display_CAN_statistics(unsigned long update_rate, unsigned long col, unsigned long row)
 {
     // usprintf(print_buf, "%u / %u  ", UPDATE_RATE, update_count);
     // RIT128x96x4StringDraw(print_buf, 5, 10, 15);
-    if (update_count >= UPDATE_RATE)
+    if (update_count >= update_rate)
     {
         usprintf(print_buf, "%u / %u  ", lost_message_count, message_count);
         RIT128x96x4StringDraw(print_buf, col, row, 15);
