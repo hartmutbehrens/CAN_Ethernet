@@ -74,7 +74,7 @@
 //*****************************************************************************
 //#define MEMP_NUM_PBUF                     20  // Default 16
 //#define MEMP_NUM_RAW_PCB                4
-//#define MEMP_NUM_UDP_PCB                4
+#define MEMP_NUM_UDP_PCB                4
 //#define MEMP_NUM_TCP_PCB                  8  // Default 5
 //#define MEMP_NUM_TCP_PCB_LISTEN         8
 //#define MEMP_NUM_TCP_SEG                  20  // Default 16
