@@ -197,9 +197,9 @@
 // ---------- UDP options ----------
 //
 //*****************************************************************************
-//#define LWIP_UDP                        1
+#define LWIP_UDP                        1
 //#define LWIP_UDPLITE                    0
-//#define UDP_TTL                         (IP_DEFAULT_TTL)
+#define UDP_TTL                         (IP_DEFAULT_TTL)
 
 //*****************************************************************************
 //

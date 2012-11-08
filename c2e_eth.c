@@ -7,6 +7,7 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"
 #include "utils/lwiplib.h"
+
 #include "c2e_eth.h"
 
 volatile unsigned long ip_displayed = 0;              					// only show IP message once
@@ -20,7 +21,7 @@ void Eth_configure(void)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);                        // Enable Port F for Ethernet LEDs.
     GPIOPinTypeEthernetLED(GPIO_PORTF_BASE, GPIO_PIN_2 | GPIO_PIN_3);   // LED0-Bit 3-Output and LED1-Bit 2-Output
 
-    SysTickPeriodSet(SysCtlClockGet() / SYSTICKUS);                     // Configure SysTick for a periodic interrupt. Used by lwIP. 
+    SysTickPeriodSet(SysCtlClockGet() / SYSTICKHZ);                     // Configure SysTick for a periodic interrupt. Used by lwIP - NB the choice of this seems to be important e.g. lwIPgetLocalIPAddr returns wrong value 
     SysTickEnable();                                                    // TODO: investigate why SYSTICKNS doesn't seem to work
     SysTickIntEnable();
 }

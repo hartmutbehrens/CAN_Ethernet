@@ -2,12 +2,14 @@
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
 #include "driverlib/sysctl.h"
+#include "driverlib/interrupt.h"
 #include "utils/lwiplib.h"
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
 #include "can_ethernet.h"
 #include "c2e_can.h"
 #include "c2e_eth.h"
+#include "c2e_udp.h"
 
 extern CAN_struct CAN_data;                            // structure to hold CAN RX and TX data
 
@@ -41,7 +43,7 @@ int main(void)
 
     Eth_configure();
     
-    // IntMasterEnable();                                               // Enable processor interrupts.
+    IntMasterEnable();                                               // Enable processor interrupts.
     unsigned char mac_address[8];                                       // buffer to hold MAC address
     get_MAC_address(mac_address);
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
@@ -49,9 +51,22 @@ int main(void)
     CAN_configure();                                                    // Enable the board for CAN processing
     CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.    
     
+    static unsigned long ulLastIPAddress = 0;
+
+    unsigned long ulIPAddress;
     while (1)                                                           // loop forever
     {
+        
         display_CAN_statistics(1,5,80);                                   // print some info to the OLED NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
-    }
 
+        ulIPAddress = lwIPLocalIPAddrGet();
+        display_ip_address(ulIPAddress,10,50);
+        if( (ulLastIPAddress != ulIPAddress)  )               
+        {
+            
+            UDP_send();    
+        }
+        
+        
+    }
 }
