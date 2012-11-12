@@ -6,29 +6,32 @@
 
 static char print_buf[64];
 
-void UDP_configure(void)
+void UDP_start(void)
 {
-	void *pcb;
+	struct udp_pcb *pcb;
     pcb = udp_new();
-    udp_recv(pcb, UDP_receive, NULL);										// set callback for incoming UDP data
     udp_bind(pcb, IP_ADDR_ANY, 23);
+    udp_connect(pcb, IP_ADDR_ANY, 23);
+    udp_recv(pcb, UDP_receive, NULL);										// set callback for incoming UDP data
+    
 }
 
 void UDP_send(void)
 {
-    void *pcb;
+    struct udp_pcb *pcb;
     unsigned char *pucData;
     struct pbuf *p;
 
     pcb = udp_new();
-    udp_recv(pcb, UDP_receive, NULL);                                       // set callback for incoming UDP data
-    udp_bind(pcb, IP_ADDR_ANY, 23);
-
+    if (pcb == NULL) 
+    {
+        RIT128x96x4StringDraw("No pcb", 5, 20, 15);   
+    }
     
     p = pbuf_alloc(PBUF_TRANSPORT, 4, PBUF_RAM);            // Allocate a pbuf for this data packet.
     if(!p)
     {
-        RIT128x96x4StringDraw("Here", 5, 20, 15);
+        RIT128x96x4StringDraw("No p", 5, 30, 15);
         return;
     }
 
@@ -44,14 +47,15 @@ void UDP_send(void)
     pucData[3] = 4;
 
     err_t status;
-    RIT128x96x4StringDraw("Before send", 10, 20, 15);
+    //RIT128x96x4StringDraw("Before send", 10, 20, 15);
     status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, 23);
-    RIT128x96x4StringDraw("After send", 10, 30, 15);
+    //RIT128x96x4StringDraw("After send", 10, 30, 15);
     usprintf(print_buf, "status = %u  ", status);
     RIT128x96x4StringDraw(print_buf, 10, 40, 15);
     
     //udp_send(psTFTP->pPCB, p);      // Send the data packet.
     pbuf_free(p);       // Free the pbuf.
+    udp_remove(pcb);
 }
 
 //*****************************************************************************

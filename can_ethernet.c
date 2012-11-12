@@ -52,7 +52,7 @@ int main(void)
     CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.    
     
     static unsigned long ulLastIPAddress = 0;
-
+    volatile unsigned long started = 0;      
     unsigned long ulIPAddress;
     while (1)                                                           // loop forever
     {
@@ -63,10 +63,12 @@ int main(void)
         display_ip_address(ulIPAddress,10,50);
         if( (ulLastIPAddress != ulIPAddress)  )               
         {
-            
-            UDP_send();    
+            if (started == 0)
+            {
+                UDP_start();
+                started = 1;
+            }
+            UDP_send();   
         }
-        
-        
     }
 }
