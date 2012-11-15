@@ -68,7 +68,7 @@ int main(void)
         }
         if (has_address)
         {
-            UDP_send();   
+            //UDP_send();   
         }
         else
         {

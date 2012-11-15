@@ -49,6 +49,10 @@ void CAN_handler(void)
         {
             lost_message_count += 1;
         }
+
+        // CAN bytes = &CAN_data.rx_msg_object
+
+        
         //int i = status-9;                                                   // index into buffer to locate receive data
         //usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
         //    CAN_data.rx_msg_object.pucMsgData[i*8+0],CAN_data.rx_msg_object.pucMsgData[i*8+1],CAN_data.rx_msg_object.pucMsgData[i*8+2],CAN_data.rx_msg_object.pucMsgData[i*8+3],

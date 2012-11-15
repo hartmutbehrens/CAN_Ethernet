@@ -5,7 +5,6 @@
 #include "c2e_udp.h"
 
 static char print_buf[64];
-static struct netif net_interface;                          // Ethernet MAC network interface
 
 void UDP_start(void)
 {
@@ -39,7 +38,6 @@ void UDP_send(void)
     }
     udp_bind(pcb, IP_ADDR_ANY, 23);
 
-    
     pucData = (unsigned char *)p->payload;                  // Get a pointer to the data packet.
 
     //
