@@ -64,7 +64,7 @@ ${COMPILER}:
 	@mkdir -p ${COMPILER}
 
 #
-# Rules for building the CAN FIFO mode example.
+# Rules for building the project
 #
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/can_ethernet.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_can.o
