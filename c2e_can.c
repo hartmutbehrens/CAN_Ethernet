@@ -10,7 +10,6 @@
 
 #include "c2e_can.h"
 
-
 CAN_struct CAN_data;                                                         // structure to hold CAN RX and TX data
 volatile unsigned long message_count = 0;                                    // CAN received message count
 volatile unsigned long update_count = 0;                                     // print CAN updates once this threshold is reached
