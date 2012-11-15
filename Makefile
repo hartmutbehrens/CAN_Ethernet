@@ -14,6 +14,11 @@ VARIANT=cm3
 ROOT=../
 
 #
+# Current working directory
+#
+PWD=`pwd`
+
+#
 # Include the common make definitions.
 #
 include ${ROOT}/makedefs
@@ -47,10 +52,10 @@ clean:
 	@rm -rf ${COMPILER} ${wildcard *~}
 
 #
-# Install - copy to vm_share for now to make available to LM Flash Programmer
+# Install - OpenOCD has to be running for this to work
 #
 install:
-	@cp gcc/can_ethernet.bin /home/hartmut/vm_share
+	@echo "flash_load ${PWD}/gcc/can_ethernet.bin" | telnet localhost 4444
 
 #
 # The rule to create the target directory.
