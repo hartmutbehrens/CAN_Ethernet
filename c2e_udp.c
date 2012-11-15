@@ -5,6 +5,7 @@
 #include "c2e_udp.h"
 
 static char print_buf[64];
+static struct netif net_interface;                          // Ethernet MAC network interface
 
 void UDP_start(void)
 {
@@ -23,9 +24,11 @@ void UDP_send(void)
     struct pbuf *p;
 
     pcb = udp_new();
+
     if (pcb == NULL) 
     {
-        RIT128x96x4StringDraw("No pcb", 5, 20, 15);   
+        RIT128x96x4StringDraw("No pcb", 5, 20, 15); 
+        return;  
     }
     
     p = pbuf_alloc(PBUF_TRANSPORT, 4, PBUF_RAM);            // Allocate a pbuf for this data packet.
@@ -34,6 +37,7 @@ void UDP_send(void)
         RIT128x96x4StringDraw("No p", 5, 30, 15);
         return;
     }
+    udp_bind(pcb, IP_ADDR_ANY, 23);
 
     
     pucData = (unsigned char *)p->payload;                  // Get a pointer to the data packet.

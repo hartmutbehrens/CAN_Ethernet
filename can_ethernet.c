@@ -52,7 +52,7 @@ int main(void)
     CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.    
     
     static unsigned long ulLastIPAddress = 0;
-    volatile unsigned long started = 0;      
+    static unsigned long has_address = 0;
     unsigned long ulIPAddress;
     while (1)                                                           // loop forever
     {
@@ -60,15 +60,19 @@ int main(void)
         display_CAN_statistics(1,5,80);                                   // print some info to the OLED NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
 
         ulIPAddress = lwIPLocalIPAddrGet();
-        display_ip_address(ulIPAddress,10,50);
-        if( (ulLastIPAddress != ulIPAddress)  )               
+        if( (ulLastIPAddress != ulIPAddress) )               
         {
-            if (started == 0)
-            {
-                UDP_start();
-                started = 1;
-            }
+            display_ip_address(ulIPAddress,10,50);
+            ulLastIPAddress = ulIPAddress;
+            has_address = 1;
+        }
+        if (has_address)
+        {
             UDP_send();   
+        }
+        else
+        {
+            
         }
     }
 }
