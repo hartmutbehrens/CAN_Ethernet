@@ -12,7 +12,6 @@
 #include "c2e_udp.h"
 
 extern CAN_struct CAN_data;                            // structure to hold CAN RX and TX data
-
 //display an lwIP address
 void display_ip_address(unsigned long ipaddr, unsigned long col, unsigned long row)
 {
@@ -68,7 +67,7 @@ int main(void)
         }
         if (has_address)
         {
-            //UDP_send();   
+            UDP_send();   
         }
         else
         {

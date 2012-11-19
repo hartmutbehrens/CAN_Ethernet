@@ -12,6 +12,7 @@
 #include "c2e_can.h"
 
 CAN_struct CAN_data;                                                         // structure to hold CAN RX and TX data
+CAN_frame CAN_frames[16];
 volatile unsigned long message_count = 0;                                    // CAN received message count
 volatile unsigned long update_count = 0;                                     // print CAN updates once this threshold is reached
 volatile unsigned long lost_message_count = 0;                               // lost CAN message count
@@ -49,23 +50,24 @@ void CAN_handler(void)
             lost_message_count += 1;
         }
 
-        // CAN bytes = &CAN_data.rx_msg_object
         unsigned long offset = status-9;                                                                // offset into buffer to locate receive data
         unsigned char ext_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
         unsigned char rtr_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
         CAN_frame frame = { .id = CAN_data.rx_msg_object.ulMsgID, .ext = ext_flag, .rtr =  rtr_flag };
         memcpy(&frame.data[0], &CAN_data.rx_msg_object.pucMsgData[offset*8], sizeof(frame.data) );
+        CAN_frames[0] = frame;
+        
         
         /*
-        usprintf(print_buf, "CAN id: %d", frame.id);
+        usprintf(print_buf, "CAN id: %d", CAN_frames[0].id);
         RIT128x96x4StringDraw(print_buf, 1, 20, 15);    
-        usprintf(print_buf, "RTR: %d", frame.rtr);
+        usprintf(print_buf, "RTR: %d", CAN_frames[0].rtr);
         RIT128x96x4StringDraw(print_buf, 1, 30, 15);    
-        usprintf(print_buf, "EXT: %d", frame.ext);
+        usprintf(print_buf, "EXT: %d", CAN_frames[0].ext);
         RIT128x96x4StringDraw(print_buf, 1, 40, 15);    
-        usprintf(print_buf, "DATA: %d", frame.data[2]);
+        usprintf(print_buf, "DATA: %d", CAN_frames[0].data[2]);
         RIT128x96x4StringDraw(print_buf, 1, 50, 15);
-        */    
+         */   
         
 
         

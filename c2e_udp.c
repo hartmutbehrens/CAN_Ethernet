@@ -1,11 +1,13 @@
+#include <string.h>
 #include "utils/lwiplib.h"
 
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
+#include "c2e_can.h"
 #include "c2e_udp.h"
 
 static char print_buf[64];
-
+extern CAN_frame CAN_frames[16];
 void UDP_start(void)
 {
 	struct udp_pcb *pcb;
@@ -19,7 +21,7 @@ void UDP_start(void)
 void UDP_send(void)
 {
     struct udp_pcb *pcb;
-    unsigned char *pucData;
+    //unsigned char *pucData;
     struct pbuf *p;
 
     pcb = udp_new();
@@ -30,7 +32,7 @@ void UDP_send(void)
         return;  
     }
     
-    p = pbuf_alloc(PBUF_TRANSPORT, 4, PBUF_RAM);            // Allocate a pbuf for this data packet.
+    p = pbuf_alloc(PBUF_TRANSPORT, sizeof(CAN_frame), PBUF_RAM);            // Allocate a pbuf for this data packet.
     if(!p)
     {
         RIT128x96x4StringDraw("No p", 5, 30, 15);
@@ -38,15 +40,17 @@ void UDP_send(void)
     }
     udp_bind(pcb, IP_ADDR_ANY, 23);
 
-    pucData = (unsigned char *)p->payload;                  // Get a pointer to the data packet.
+    //pucData = (unsigned char *)p->payload;                  // Get a pointer to the data packet.
+    //pucData = p->payload;
+    memcpy(p->payload, &CAN_frames[0], sizeof(CAN_frame));
 
     //
     // Fill in the packet header.
     //
-    pucData[0] = 1;
-    pucData[1] = 2;
-    pucData[2] = 3;
-    pucData[3] = 4;
+    //pucData[0] = 1;
+    //pucData[1] = 2;
+    //pucData[2] = 3;
+    //pucData[3] = 4;
 
     err_t status;
     //RIT128x96x4StringDraw("Before send", 10, 20, 15);
@@ -54,6 +58,8 @@ void UDP_send(void)
     //RIT128x96x4StringDraw("After send", 10, 30, 15);
     usprintf(print_buf, "status = %u  ", status);
     RIT128x96x4StringDraw(print_buf, 10, 40, 15);
+    usprintf(print_buf, "ID = %u  ", CAN_frames[0].id);
+    RIT128x96x4StringDraw(print_buf, 10, 50, 15);
     
     //udp_send(psTFTP->pPCB, p);      // Send the data packet.
     pbuf_free(p);       // Free the pbuf.
