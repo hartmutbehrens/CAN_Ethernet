@@ -18,6 +18,14 @@ typedef struct
     unsigned long bytes_transmitted;
 } CAN_struct;								// structure to hold CAN RX and TX data
 
+typedef struct
+{
+	unsigned long id;
+	unsigned char data[8];
+	unsigned char ext;
+	unsigned char rtr;
+} CAN_frame;								// structure to hold CAN data for RX/TX from/to Ethernet
+
 void display_CAN_statistics(unsigned long update_rate, unsigned long col, unsigned long row);
 void CAN_handler(void);
 void CAN_configure(void);

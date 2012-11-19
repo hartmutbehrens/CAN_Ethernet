@@ -62,7 +62,7 @@ int main(void)
         ulIPAddress = lwIPLocalIPAddrGet();
         if( (ulLastIPAddress != ulIPAddress) )               
         {
-            display_ip_address(ulIPAddress,10,50);
+            display_ip_address(ulIPAddress,1,70);
             ulLastIPAddress = ulIPAddress;
             has_address = 1;
         }

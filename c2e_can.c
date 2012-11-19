@@ -1,3 +1,4 @@
+#include <string.h>
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
@@ -18,8 +19,6 @@ static char print_buf[64];
 
 void display_CAN_statistics(unsigned long update_rate, unsigned long col, unsigned long row)
 {
-    // usprintf(print_buf, "%u / %u  ", UPDATE_RATE, update_count);
-    // RIT128x96x4StringDraw(print_buf, 5, 10, 15);
     if (update_count >= update_rate)
     {
         usprintf(print_buf, "%u / %u  ", lost_message_count, message_count);
@@ -51,9 +50,26 @@ void CAN_handler(void)
         }
 
         // CAN bytes = &CAN_data.rx_msg_object
+        unsigned long offset = status-9;                                                                // offset into buffer to locate receive data
+        unsigned char ext_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
+        unsigned char rtr_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
+        CAN_frame frame = { .id = CAN_data.rx_msg_object.ulMsgID, .ext = ext_flag, .rtr =  rtr_flag };
+        memcpy(&frame.data[0], &CAN_data.rx_msg_object.pucMsgData[offset*8], sizeof(frame.data) );
+        
+        /*
+        usprintf(print_buf, "CAN id: %d", frame.id);
+        RIT128x96x4StringDraw(print_buf, 1, 20, 15);    
+        usprintf(print_buf, "RTR: %d", frame.rtr);
+        RIT128x96x4StringDraw(print_buf, 1, 30, 15);    
+        usprintf(print_buf, "EXT: %d", frame.ext);
+        RIT128x96x4StringDraw(print_buf, 1, 40, 15);    
+        usprintf(print_buf, "DATA: %d", frame.data[2]);
+        RIT128x96x4StringDraw(print_buf, 1, 50, 15);
+        */    
+        
 
         
-        //int i = status-9;                                                   // index into buffer to locate receive data
+        
         //usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
         //    CAN_data.rx_msg_object.pucMsgData[i*8+0],CAN_data.rx_msg_object.pucMsgData[i*8+1],CAN_data.rx_msg_object.pucMsgData[i*8+2],CAN_data.rx_msg_object.pucMsgData[i*8+3],
         //    CAN_data.rx_msg_object.pucMsgData[i*8+4],CAN_data.rx_msg_object.pucMsgData[i*8+5],CAN_data.rx_msg_object.pucMsgData[i*8+6],CAN_data.rx_msg_object.pucMsgData[i*8+7]);
