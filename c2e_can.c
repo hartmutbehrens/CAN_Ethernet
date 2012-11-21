@@ -10,9 +10,11 @@
 #include "drivers/rit128x96x4.h"
 
 #include "c2e_can.h"
+#include "c2e_utils.h"
 
 CAN_struct CAN_data;                                                         // structure to hold CAN RX and TX data
-CAN_frame CAN_frames[16];
+CAN_UDP_struct CAN_frame;                                                    // structure holding CAN data that will be sent via UDP 
+
 volatile unsigned long message_count = 0;                                    // CAN received message count
 volatile unsigned long update_count = 0;                                     // print CAN updates once this threshold is reached
 volatile unsigned long lost_message_count = 0;                               // lost CAN message count
@@ -51,13 +53,24 @@ void CAN_handler(void)
         }
 
         unsigned long offset = status-9;                                                                // offset into buffer to locate receive data
-        unsigned char ext_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
-        unsigned char rtr_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
-        CAN_frame frame = { .id = CAN_data.rx_msg_object.ulMsgID, .ext = ext_flag, .rtr =  rtr_flag };
-        memcpy(&frame.data[0], &CAN_data.rx_msg_object.pucMsgData[offset*8], sizeof(frame.data) );
-        CAN_frames[0] = frame;
+        CAN_frame.ext_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
+        CAN_frame.rtr_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
+        //CAN_frame.id[0] = CAN_data.rx_msg_object.ulMsgID & 0xff;
+        //CAN_frame.id[1] = (CAN_data.rx_msg_object.ulMsgID >> 8) & 0xff;
+        //CAN_frame.id[2] = (CAN_data.rx_msg_object.ulMsgID >> 16) & 0xff;
+        //CAN_frame.id[3] = (CAN_data.rx_msg_object.ulMsgID >> 16) & 0xff;
+        memcpy(&CAN_frame.id[0], &CAN_data.rx_msg_object.ulMsgID, 4 );                                  // This is probably not a portable way of copying msg id to to the CAN frame
+        memcpy(&CAN_frame.data[0], &CAN_data.rx_msg_object.pucMsgData[offset*8], 8 );
+
+        //usprintf(print_buf, "CAN id: %d",CAN_frame.id[0]);
+        //RIT128x96x4StringDraw(print_buf, 10, 20, 15);
+        //CAN_frame frame = { .id = CAN_data.rx_msg_object.ulMsgID, .ext = ext_flag, .rtr =  rtr_flag };
+        //memcpy(&frame.data[0], &CAN_data.rx_msg_object.pucMsgData[offset*8], sizeof(frame.data) );
+        //CAN_frames[0] = frame;
         
         
+        //usprintf(print_buf, "Buf size: %u", n);
+        //RIT128x96x4StringDraw(print_buf, 10, 20, 15);    
         /*
         usprintf(print_buf, "CAN id: %d", CAN_frames[0].id);
         RIT128x96x4StringDraw(print_buf, 1, 20, 15);    

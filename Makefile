@@ -70,6 +70,7 @@ ${COMPILER}/can_ethernet.axf: ${COMPILER}/can_ethernet.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_can.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_eth.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_udp.o
+${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_utils.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/rit128x96x4.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/startup_${COMPILER}.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/lwiplib.o
