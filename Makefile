@@ -73,6 +73,7 @@ ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_udp.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/rit128x96x4.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/startup_${COMPILER}.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/lwiplib.o
+${COMPILER}/can_ethernet.axf: ${COMPILER}/ringbuf.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/ustdlib.o
 ${COMPILER}/can_ethernet.axf: ${ROOT}/driverlib/${COMPILER}-cm3/libdriver-cm3.a
 ${COMPILER}/can_ethernet.axf: can_ethernet.ld

@@ -13,6 +13,8 @@
 #include "c2e_eth.h"
 #include "c2e_udp.h"
 
+static unsigned char ring_rxbuf[RING_BUF_SIZE];
+tRingBufObject g_can_ringbuf;
 //display an lwIP address
 void display_ip_address(uint32_t ipaddr, uint32_t col, uint32_t row)
 {
@@ -39,6 +41,9 @@ int main(void)
     RIT128x96x4Enable(1000000);
     RIT128x96x4StringDraw("CAN2ETH", 10, 10, 15);                       // Say Hello
 
+    RingBufInit(&g_can_ringbuf, ring_rxbuf, sizeof(ring_rxbuf));        // initialize ring buffer to receive CAN frames
+
+
     Eth_configure();
     
     IntMasterEnable();                                               // Enable processor interrupts.
@@ -47,7 +52,6 @@ int main(void)
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
 
     CAN_configure();                                                    // Enable the board for CAN processing
-    
     
     static uint32_t ulLastIPAddress = 0;
     static uint32_t has_address = 0;
