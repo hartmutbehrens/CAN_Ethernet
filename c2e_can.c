@@ -11,9 +11,7 @@
 
 #include "c2e_can.h"
 
-CAN_struct CAN_data;                                                         // structure to hold CAN RX and TX data
-CAN_UDP_struct CAN_frame;                                                    // structure holding CAN data that will be sent via UDP 
-
+can_struct_t CAN_data;                                                         // structure to hold CAN RX and TX data
 volatile uint32_t message_count = 0;                                    // CAN received message count
 volatile uint32_t update_count = 0;                                     // print CAN updates once this threshold is reached
 volatile uint32_t lost_message_count = 0;                               // lost CAN message count
@@ -34,6 +32,8 @@ void display_CAN_statistics(uint32_t update_rate, uint32_t col, uint32_t row)
 void CAN_handler(void)
 {
     uint32_t status;
+    uint32_uchar_t num;
+    unsigned char frame[12];                                                  // CAN frame to send
     status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority
     
     if(status <= 8)                                                           // The first eight message objects make up the Transmit message FIFO.
@@ -51,44 +51,15 @@ void CAN_handler(void)
             lost_message_count += 1;
         }
 
-        uint32_t offset = status-9;                                                                // offset into buffer to locate receive data
+        int offset = status-9;                                                             // offset into buffer to locate receive data
+        num.n = CAN_data.rx_msg_object.ulMsgID;                                            // assign to union with a view to converting to unsigned char
+        memcpy(&frame[0], &num.bytes[0], 4);                                               // copy CAN ID into frame
+        memcpy(&frame[4], &CAN_data.rx_msg_object.pucMsgData[offset*8], 8 );               // copy CAN data into frame
+        frame[10] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
+        frame[11] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
 
-        CAN_frame.ext_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
-        CAN_frame.rtr_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
-        //CAN_frame.id[0] = CAN_data.rx_msg_object.ulMsgID & 0xff;
-        //CAN_frame.id[1] = (CAN_data.rx_msg_object.ulMsgID >> 8) & 0xff;
-        //CAN_frame.id[2] = (CAN_data.rx_msg_object.ulMsgID >> 16) & 0xff;
-        //CAN_frame.id[3] = (CAN_data.rx_msg_object.ulMsgID >> 16) & 0xff;
-        memcpy(&CAN_frame.id[0], &CAN_data.rx_msg_object.ulMsgID, 4 );                                  // This is probably not a portable way of copying msg id to to the CAN frame
-        memcpy(&CAN_frame.data[0], &CAN_data.rx_msg_object.pucMsgData[offset*8], 8 );
-
-        //usprintf(print_buf, "CAN id: %d",CAN_frame.id[0]);
-        //RIT128x96x4StringDraw(print_buf, 10, 20, 15);
-        //CAN_frame frame = { .id = CAN_data.rx_msg_object.ulMsgID, .ext = ext_flag, .rtr =  rtr_flag };
-        //memcpy(&frame.data[0], &CAN_data.rx_msg_object.pucMsgData[offset*8], sizeof(frame.data) );
-        //CAN_frames[0] = frame;
-        
-        
-        //usprintf(print_buf, "Buf size: %u", n);
-        //RIT128x96x4StringDraw(print_buf, 10, 20, 15);    
-        /*
-        usprintf(print_buf, "CAN id: %d", CAN_frames[0].id);
-        RIT128x96x4StringDraw(print_buf, 1, 20, 15);    
-        usprintf(print_buf, "RTR: %d", CAN_frames[0].rtr);
-        RIT128x96x4StringDraw(print_buf, 1, 30, 15);    
-        usprintf(print_buf, "EXT: %d", CAN_frames[0].ext);
-        RIT128x96x4StringDraw(print_buf, 1, 40, 15);    
-        usprintf(print_buf, "DATA: %d", CAN_frames[0].data[2]);
-        RIT128x96x4StringDraw(print_buf, 1, 50, 15);
-         */   
-        
 
         
-        
-        //usprintf(print_buf, "%u %u %u %u %u %u %u %u", 
-        //    CAN_data.rx_msg_object.pucMsgData[i*8+0],CAN_data.rx_msg_object.pucMsgData[i*8+1],CAN_data.rx_msg_object.pucMsgData[i*8+2],CAN_data.rx_msg_object.pucMsgData[i*8+3],
-        //    CAN_data.rx_msg_object.pucMsgData[i*8+4],CAN_data.rx_msg_object.pucMsgData[i*8+5],CAN_data.rx_msg_object.pucMsgData[i*8+6],CAN_data.rx_msg_object.pucMsgData[i*8+7]);
-        //RIT128x96x4StringDraw(print_buf, 10, 10, 15);    
 
         CAN_data.rx_msg_object.pucMsgData += 8;                               // Advance the read pointer.
         CAN_data.bytes_remaining -= 8;                                        // Decrement the expected bytes remaining.
@@ -117,10 +88,11 @@ void CAN_configure(void)                                                // Enabl
     CANIntEnable(CAN0_BASE, CAN_INT_MASTER | CAN_INT_ERROR);            // Enable interrupts from CAN controller.
     IntEnable(INT_CAN0);                                                // Enable interrupts for the CAN in the NVIC.
     CANEnable(CAN0_BASE);                                               // Take the CAN0 device out of INIT state.
+    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.    
 }
 
 // This function configures the receive FIFO and should only be called once.
-int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, CAN_struct *CAN_data)
+int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, can_struct_t *CAN_data)
 {
 	int idx;
     if(rx_size > CAN_FIFO_SIZE)

@@ -7,7 +7,6 @@
 #include "c2e_udp.h"
 
 static char print_buf[64];
-extern CAN_UDP_struct CAN_frame; 
 void UDP_start(void)
 {
 	struct udp_pcb *pcb;
@@ -21,7 +20,7 @@ void UDP_start(void)
 void UDP_send(void)
 {
     struct udp_pcb *pcb;
-    //unsigned char *pucData;
+    unsigned char *pucData;
     struct pbuf *p;
 
     pcb = udp_new();
@@ -32,7 +31,7 @@ void UDP_send(void)
         return;  
     }
     
-    p = pbuf_alloc(PBUF_TRANSPORT, 14, PBUF_RAM);            // Allocate a pbuf for this data packet.
+    p = pbuf_alloc(PBUF_TRANSPORT, 4, PBUF_RAM);            // Allocate a pbuf for this data packet.
     if(!p)
     {
         RIT128x96x4StringDraw("No p", 5, 30, 15);
@@ -40,17 +39,16 @@ void UDP_send(void)
     }
     udp_bind(pcb, IP_ADDR_ANY, 23);
 
-    //pucData = (unsigned char *)p->payload;                  // Get a pointer to the data packet.
-    //pucData = p->payload;
+    pucData = (unsigned char *)p->payload;                  // Get a pointer to the data packet.
+    pucData = p->payload;
 
     //
     // Fill in the packet header.
     //
-    //pucData[0] = 1;
-    //pucData[1] = 2;
-    //pucData[2] = 3;
-    //pucData[3] = 4;
-    memcpy(p->payload,&CAN_frame,14);
+    pucData[0] = 1;
+    pucData[1] = 2;
+    pucData[2] = 3;
+    pucData[3] = 4;
 
     err_t status;
     //RIT128x96x4StringDraw("Before send", 10, 20, 15);

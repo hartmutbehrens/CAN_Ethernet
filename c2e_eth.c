@@ -11,7 +11,6 @@
 
 #include "c2e_eth.h"
 
-volatile uint32_t ip_displayed = 0;              					// only show IP message once
 static volatile uint32_t systick_flag;								// flag for indicating that a SysTick has occured
 
 void Eth_configure(void)
@@ -28,7 +27,7 @@ void Eth_configure(void)
 }
 
 
-void get_MAC_address(unsigned char *mac_address)						// Configure the hardware MAC address for Ethernet Controller filtering of incoming packets. 
+void get_mac_address(unsigned char *mac_address)						// Configure the hardware MAC address for Ethernet Controller filtering of incoming packets. 
 {																		// MAC address is stored in the non-volatile USER0 and USER1 registers
 	uint32_t user0, user1;                                         // variables to retrieve MAC address from flash
 	FlashUserGet(&user0, &user1);
@@ -61,18 +60,9 @@ void lwIPHostTimerHandler(void)											// This function is required by lwIP l
     uint32_t ulIPAddress;
     ulIPAddress = lwIPLocalIPAddrGet();
 
-    if( (ulLastIPAddress != ulIPAddress) && (!ip_displayed) )			// If IP Address has not yet been assigned, update the display accordingly
+    if( ulLastIPAddress != ulIPAddress)			// If IP Address has not yet been assigned, update the display accordingly
     {
         ulLastIPAddress = ulIPAddress;
-        //RIT128x96x4StringDraw("IP:   ", 0, 16, 15);
-        //RIT128x96x4StringDraw("MASK: ", 0, 24, 15);
-        //RIT128x96x4StringDraw("GW:   ", 0, 32, 15);
-        //display_ip_address(ulIPAddress, 0, 16);
-        //ulIPAddress = lwIPLocalNetMaskGet();
-        //display_ip_address(ulIPAddress, 36, 24);
-        //ulIPAddress = lwIPLocalGWAddrGet();
-        //display_ip_address(ulIPAddress, 36, 32);
-        ip_displayed = 1;
     }    
 }
 

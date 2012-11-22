@@ -10,7 +10,7 @@
 #define SYSTICKNS               (1000000000 / SYSTICKHZ)
 
 void Eth_configure(void);
-void get_MAC_address(unsigned char *mac_address);
+void get_mac_address(unsigned char *mac_address);
 void lwIPHostTimerHandler(void);
 void SYSTICK_handler(void);
 #endif
