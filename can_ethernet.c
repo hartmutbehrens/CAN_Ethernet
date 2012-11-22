@@ -14,7 +14,7 @@
 #include "c2e_udp.h"
 
 static unsigned char ring_rxbuf[RING_BUF_SIZE];
-tRingBufObject g_can_ringbuf;
+tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
 //display an lwIP address
 void display_ip_address(uint32_t ipaddr, uint32_t col, uint32_t row)
 {
@@ -41,8 +41,7 @@ int main(void)
     RIT128x96x4Enable(1000000);
     RIT128x96x4StringDraw("CAN2ETH", 10, 10, 15);                       // Say Hello
 
-    RingBufInit(&g_can_ringbuf, ring_rxbuf, sizeof(ring_rxbuf));        // initialize ring buffer to receive CAN frames
-
+    RingBufInit(&g_can_ringbuf, &ring_rxbuf[0], sizeof(ring_rxbuf));        // initialize ring buffer to receive CAN frames
 
     Eth_configure();
     

@@ -5,7 +5,7 @@
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
-
+#include "utils/ringbuf.h"
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
 
@@ -15,10 +15,11 @@ can_struct_t CAN_data;                                                         /
 volatile uint32_t message_count = 0;                                    // CAN received message count
 volatile uint32_t update_count = 0;                                     // print CAN updates once this threshold is reached
 volatile uint32_t lost_message_count = 0;                               // lost CAN message count
-static char print_buf[64];
+extern tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
 
 void display_CAN_statistics(uint32_t update_rate, uint32_t col, uint32_t row)
 {
+    static char print_buf[64];
     if (update_count >= update_rate)
     {
         usprintf(print_buf, "%u / %u  ", lost_message_count, message_count);
@@ -33,7 +34,7 @@ void CAN_handler(void)
 {
     uint32_t status;
     uint32_uchar_t num;
-    unsigned char frame[12];                                                  // CAN frame to send
+    unsigned char frame[CAN_FRAME_SIZE];                                      // CAN frame to send
     status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority
     
     if(status <= 8)                                                           // The first eight message objects make up the Transmit message FIFO.
@@ -58,7 +59,7 @@ void CAN_handler(void)
         frame[EXT_FLAG_POS] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
         frame[RTR_FLAG_POS] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
 
-
+        RingBufWrite(&g_can_ringbuf, &frame[0], CAN_FRAME_SIZE);
         
 
         CAN_data.rx_msg_object.pucMsgData += 8;                               // Advance the read pointer.
