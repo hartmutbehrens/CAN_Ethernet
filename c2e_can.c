@@ -60,7 +60,6 @@ void CAN_handler(void)
         frame[RTR_FLAG_POS] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
 
         RingBufWrite(&g_can_ringbuf, &frame[0], CAN_FRAME_SIZE);
-        
 
         CAN_data.rx_msg_object.pucMsgData += 8;                               // Advance the read pointer.
         CAN_data.bytes_remaining -= 8;                                        // Decrement the expected bytes remaining.

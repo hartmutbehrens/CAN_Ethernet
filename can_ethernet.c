@@ -15,12 +15,21 @@
 
 static unsigned char ring_rxbuf[RING_BUF_SIZE];
 tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
+char buffer[16];
+unsigned char frame[12];
 //display an lwIP address
 void display_ip_address(uint32_t ipaddr, uint32_t col, uint32_t row)
 {
-    char buffer[16];
+    /*
+    if( !RingBufEmpty(&g_can_ringbuf) )
+    {
+        RingBufRead(&g_can_ringbuf, &frame[0], 12);
+        usprintf(buffer, "CAN id: %d.%d.%d.%d", frame[0], frame[1], frame[2], frame[3]);
+        RIT128x96x4StringDraw(buffer, col, row-10, 15);
+    }
+    */
+    
     unsigned char *temp = (unsigned char *)&ipaddr;
-
     // Convert the IP Address into a string for display purposes
     usprintf(buffer, "IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
     RIT128x96x4StringDraw(buffer, col, row, 15);
