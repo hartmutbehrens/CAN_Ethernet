@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
@@ -10,8 +11,8 @@
 
 #include "c2e_eth.h"
 
-volatile unsigned long ip_displayed = 0;              					// only show IP message once
-static volatile unsigned long systick_flag;								// flag for indicating that a SysTick has occured
+volatile uint32_t ip_displayed = 0;              					// only show IP message once
+static volatile uint32_t systick_flag;								// flag for indicating that a SysTick has occured
 
 void Eth_configure(void)
 {
@@ -29,7 +30,7 @@ void Eth_configure(void)
 
 void get_MAC_address(unsigned char *mac_address)						// Configure the hardware MAC address for Ethernet Controller filtering of incoming packets. 
 {																		// MAC address is stored in the non-volatile USER0 and USER1 registers
-	unsigned long user0, user1;                                         // variables to retrieve MAC address from flash
+	uint32_t user0, user1;                                         // variables to retrieve MAC address from flash
 	FlashUserGet(&user0, &user1);
     if((user0 == 0xffffffff) || (user1 == 0xffffffff))
     {
@@ -56,8 +57,8 @@ void SYSTICK_handler(void)												// SYSTICK interrupt handler
 
 void lwIPHostTimerHandler(void)											// This function is required by lwIP library to support any host-related timer functions.
 {																		// Define HOST_TMR_INTERVAL in lwipopts.h to use
-    static unsigned long ulLastIPAddress = 0;
-    unsigned long ulIPAddress;
+    static uint32_t ulLastIPAddress = 0;
+    uint32_t ulIPAddress;
     ulIPAddress = lwIPLocalIPAddrGet();
 
     if( (ulLastIPAddress != ulIPAddress) && (!ip_displayed) )			// If IP Address has not yet been assigned, update the display accordingly
