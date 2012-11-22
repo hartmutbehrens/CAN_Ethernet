@@ -54,7 +54,9 @@ int main(void)
 
     Eth_configure();
     
-    IntMasterEnable();                                               // Enable processor interrupts.
+    IntMasterEnable();                                                  // Enable processor interrupts.
+    IntPrioritySet(INT_CAN0, 0x00);                                     // Set CAN interrupt highest priority because messages to be sent via UDP are buffered
+    IntPrioritySet(INT_ETH, 0x01);                                      // Set Eth interrupt priority slightly less than CAN interrupt
     unsigned char mac_address[8];                                       // buffer to hold MAC address
     get_mac_address(mac_address);
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
