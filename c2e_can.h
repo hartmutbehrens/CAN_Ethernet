@@ -1,5 +1,6 @@
 #ifndef __C2E_CAN_H__
 #define __C2E_CAN_H__
+#include <stdint.h>
 #include "inc/hw_types.h"
 #include "driverlib/can.h"
 
@@ -14,8 +15,8 @@ typedef struct
     tCANMsgObject tx_msg_object;			// TX object
     unsigned char tx_buffer[CAN_FIFO_SIZE];	// TX buffer
 
-    unsigned long bytes_remaining;
-    unsigned long bytes_transmitted;
+    uint32_t bytes_remaining;
+    uint32_t bytes_transmitted;
 } CAN_struct;								// structure to hold CAN RX and TX data
 
 typedef struct 
@@ -26,9 +27,9 @@ typedef struct
     unsigned char rtr_flag;
 } CAN_UDP_struct;							// structure to hold CAN data that will be sent via UDP
 
-void display_CAN_statistics(unsigned long update_rate, unsigned long col, unsigned long row);
+void display_CAN_statistics(uint32_t update_rate, uint32_t col, uint32_t row);
 void CAN_handler(void);
 void CAN_configure(void);
-int CAN_receive_FIFO(unsigned char *data, unsigned long rx_size, CAN_struct *CAN_data);
+int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, CAN_struct *CAN_data);
 
 #endif

@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "inc/hw_ints.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
@@ -13,15 +14,13 @@
 
 extern CAN_struct CAN_data;                            // structure to hold CAN RX and TX data
 //display an lwIP address
-void display_ip_address(unsigned long ipaddr, unsigned long col, unsigned long row)
+void display_ip_address(uint32_t ipaddr, uint32_t col, uint32_t row)
 {
     char buffer[16];
     unsigned char *temp = (unsigned char *)&ipaddr;
 
     // Convert the IP Address into a string for display purposes
     usprintf(buffer, "IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
-
-    // Display on OLED
     RIT128x96x4StringDraw(buffer, col, row, 15);
 }
 
@@ -50,9 +49,10 @@ int main(void)
     CAN_configure();                                                    // Enable the board for CAN processing
     CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.    
     
-    static unsigned long ulLastIPAddress = 0;
-    static unsigned long has_address = 0;
-    unsigned long ulIPAddress;
+    static uint32_t ulLastIPAddress = 0;
+    static uint32_t has_address = 0;
+    //uint32_t ulIPAddress;
+    uint32_t ulIPAddress;
     while (1)                                                           // loop forever
     {
         
@@ -67,7 +67,7 @@ int main(void)
         }
         if (has_address)
         {
-            UDP_send();   
+            //UDP_send();   
         }
         else
         {

@@ -10,17 +10,16 @@
 #include "drivers/rit128x96x4.h"
 
 #include "c2e_can.h"
-#include "c2e_utils.h"
 
 CAN_struct CAN_data;                                                         // structure to hold CAN RX and TX data
 CAN_UDP_struct CAN_frame;                                                    // structure holding CAN data that will be sent via UDP 
 
-volatile unsigned long message_count = 0;                                    // CAN received message count
-volatile unsigned long update_count = 0;                                     // print CAN updates once this threshold is reached
-volatile unsigned long lost_message_count = 0;                               // lost CAN message count
+volatile uint32_t message_count = 0;                                    // CAN received message count
+volatile uint32_t update_count = 0;                                     // print CAN updates once this threshold is reached
+volatile uint32_t lost_message_count = 0;                               // lost CAN message count
 static char print_buf[64];
 
-void display_CAN_statistics(unsigned long update_rate, unsigned long col, unsigned long row)
+void display_CAN_statistics(uint32_t update_rate, uint32_t col, uint32_t row)
 {
     if (update_count >= update_rate)
     {
@@ -34,7 +33,7 @@ void display_CAN_statistics(unsigned long update_rate, unsigned long col, unsign
 // CAN controller interrupt handler.
 void CAN_handler(void)
 {
-    unsigned long status;
+    uint32_t status;
     status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority
     
     if(status <= 8)                                                           // The first eight message objects make up the Transmit message FIFO.
@@ -52,7 +51,8 @@ void CAN_handler(void)
             lost_message_count += 1;
         }
 
-        unsigned long offset = status-9;                                                                // offset into buffer to locate receive data
+        uint32_t offset = status-9;                                                                // offset into buffer to locate receive data
+
         CAN_frame.ext_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
         CAN_frame.rtr_flag = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
         //CAN_frame.id[0] = CAN_data.rx_msg_object.ulMsgID & 0xff;
@@ -120,7 +120,7 @@ void CAN_configure(void)                                                // Enabl
 }
 
 // This function configures the receive FIFO and should only be called once.
-int CAN_receive_FIFO(unsigned char *data, unsigned long rx_size, CAN_struct *CAN_data)
+int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, CAN_struct *CAN_data)
 {
 	int idx;
     if(rx_size > CAN_FIFO_SIZE)

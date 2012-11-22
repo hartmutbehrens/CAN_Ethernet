@@ -76,7 +76,7 @@ void UDP_send(void)
 void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port)
 {
     //unsigned char *pucData;
-    //unsigned long ulIdx;
+    //uint32_t ulIdx;
 
 /*
     //
