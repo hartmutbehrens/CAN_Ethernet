@@ -11,6 +11,7 @@ static void HARDFAULT_handler(void);
 static void default_handler(void);
 
 extern void CAN_handler(void);              // External declaration of CAN interupt handler - function is defined defined in another source file
+extern void PENDSV_handler(void);           // External declaration of PendSV interrupt handler - function is defined in another source file
 extern void SYSTICK_handler(void);          // External declaration of SysTick interupt handler - function is defined in another source file
 extern void lwIPEthernetIntHandler(void);   // External declaration of Ethernet interupt handler - call lwIP handler
 
@@ -39,7 +40,7 @@ void (* const g_pfnVectors[])(void) =
     default_handler,                      // SVCall handler
     default_handler,                      // Debug monitor handler
     0,                                    // Reserved
-    default_handler,                      // The PendSV handler
+    PENDSV_handler,                      // The PendSV handler
     SYSTICK_handler,                      // The SysTick handler
     default_handler,                      // GPIO Port A
     default_handler,                      // GPIO Port B
