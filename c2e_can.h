@@ -3,13 +3,8 @@
 #include <stdint.h>
 #include "inc/hw_types.h"
 #include "driverlib/can.h"
+#include "config.h"
 
-#define CAN_FIFO_SIZE   (8 * 8)             // size of FIFO buffers allocated to the CAN controller - 8 messages can each hold a max of 8 bytes
-#define CAN_FRAME_SIZE 14                   // size of CAN frame to be sent via UDP
-#define CAN_BITRATE 1000000                 // set CAN bitrate to 1Mbps
-#define EXT_FLAG_POS 12                     // position of CAN message ID flag in CAN frame
-#define RTR_FLAG_POS 13                     // position of CAN remote transmission flag in CAN frame
-#define TRIGGER_THRESHOLD 1                 // number of received CAN frames required to trigger a UDP send
 
 typedef struct 
 {
@@ -20,12 +15,6 @@ typedef struct
     uint32_t bytes_remaining;
     uint32_t bytes_transmitted;
 } can_struct_t;								// structure to hold CAN RX and TX data
-
-typedef union 
-{
-    uint32_t n;
-    unsigned char bytes[sizeof(uint32_t)];
-} uint32_uchar_t;                           // structure to convert from unsigned long to unsigned char[]. Useful when sending via UDP
 
 void display_CAN_statistics(uint32_t update_rate, uint32_t col, uint32_t row);
 void CAN_handler(void);
