@@ -25,43 +25,30 @@ void UDP_send(tRingBufObject *pt_ring_buf)
     struct pbuf *p;
 
     pcb = udp_new();
-
+    uint32_t size = RingBufUsed(pt_ring_buf);
+    usprintf(print_buf, "size = %u  ", size);
+    RIT128x96x4StringDraw(print_buf, 10, 30, 15);
     if (pcb == NULL) 
     {
-        RIT128x96x4StringDraw("No pcb", 5, 20, 15); 
+        RIT128x96x4StringDraw("Err: No mem for pcb", 5, 20, 15); 
         return;  
     }
     
-    p = pbuf_alloc(PBUF_TRANSPORT, CAN_FRAME_SIZE, PBUF_RAM);            // Allocate a pbuf for this data packet.
+    p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);            // Allocate a pbuf for this data packet.
     if(!p)
     {
-        RIT128x96x4StringDraw("No p", 5, 30, 15);
+        RIT128x96x4StringDraw("Err: No mem for p", 5, 30, 15);
         return;
     }
     udp_bind(pcb, IP_ADDR_ANY, 23);
 
     pucData = (unsigned char *)p->payload;                  // Get a pointer to the data packet.
-    RingBufRead(pt_ring_buf, pucData, CAN_FRAME_SIZE);
-    //pucData = p->payload;
-
-    //
-    // Fill in the packet header.
-    //
-    //pucData[0] = 1;
-    //pucData[1] = 2;
-    //pucData[2] = 3;
-    //pucData[3] = 4;
-
-    err_t status;
-    //RIT128x96x4StringDraw("Before send", 10, 20, 15);
-    status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, 23);
-    //RIT128x96x4StringDraw("After send", 10, 30, 15);
+    RingBufRead(pt_ring_buf, pucData, size);
+    
+    err_t status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, 23);
+    
     usprintf(print_buf, "status = %u  ", status);
     RIT128x96x4StringDraw(print_buf, 10, 40, 15);
-    //usprintf(print_buf, "ID = %u  ", CAN_frames[0].id);
-    //RIT128x96x4StringDraw(print_buf, 10, 50, 15);
-    
-    //udp_send(psTFTP->pPCB, p);      // Send the data packet.
     pbuf_free(p);       // Free the pbuf.
     udp_remove(pcb);
 }

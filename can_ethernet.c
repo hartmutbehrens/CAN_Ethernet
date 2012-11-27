@@ -11,7 +11,6 @@
 #include "utils/ringbuf.h"
 #include "drivers/rit128x96x4.h"
 #include "can_ethernet.h"
-#include "c2e_can.h"
 #include "c2e_eth.h"
 #include "c2e_udp.h"
 

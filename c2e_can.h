@@ -25,7 +25,7 @@ typedef union
 {
     uint32_t n;
     unsigned char bytes[sizeof(uint32_t)];
-} uint32_uchar_t;
+} uint32_uchar_t;                           // structure to convert from unsigned long to unsigned char[]. Useful when sending via UDP
 
 void display_CAN_statistics(uint32_t update_rate, uint32_t col, uint32_t row);
 void CAN_handler(void);
