@@ -1,9 +1,10 @@
 #ifndef __C2E_CAN_ETHERNET_H
 #define __C2E_CAN_ETHERNET_H
+#include "c2e_can.h"
 
 #ifndef DHCP_EXPIRE_TIMER_SECS
 #define DHCP_EXPIRE_TIMER_SECS 45			// Timeout for DHCP address request
-#define RING_BUF_SIZE (12*16*10)             // size of ring buffer
+#define RING_BUF_SIZE (CAN_FRAME_SIZE*16*10)             // size of ring buffer
 #endif
 
 void display_ip_address(uint32_t ipaddr, uint32_t ulCol,uint32_t ulRow);							// display an lwIP address

@@ -1,6 +1,7 @@
 #include <string.h>
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
+#include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
@@ -69,6 +70,7 @@ void CAN_handler(void)
             CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;           // re-assign pointer to buffer that will hold message data - seems to be necessary to prevent lock-up (presumably due to memory fillup?)
             CAN_data.bytes_remaining = CAN_FIFO_SIZE;                         // reset number of bytes expected
         }
+        HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
     }
     else
     {

@@ -1,6 +1,7 @@
 #include <string.h>
+#include "inc/hw_types.h"
 #include "utils/lwiplib.h"
-
+#include "utils/ringbuf.h"
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
 #include "c2e_can.h"
@@ -17,7 +18,7 @@ void UDP_start(void)
     
 }
 
-void UDP_send(void)
+void UDP_send(tRingBufObject *pt_ring_buf)
 {
     struct udp_pcb *pcb;
     unsigned char *pucData;
@@ -31,7 +32,7 @@ void UDP_send(void)
         return;  
     }
     
-    p = pbuf_alloc(PBUF_TRANSPORT, 4, PBUF_RAM);            // Allocate a pbuf for this data packet.
+    p = pbuf_alloc(PBUF_TRANSPORT, CAN_FRAME_SIZE, PBUF_RAM);            // Allocate a pbuf for this data packet.
     if(!p)
     {
         RIT128x96x4StringDraw("No p", 5, 30, 15);
@@ -40,15 +41,16 @@ void UDP_send(void)
     udp_bind(pcb, IP_ADDR_ANY, 23);
 
     pucData = (unsigned char *)p->payload;                  // Get a pointer to the data packet.
-    pucData = p->payload;
+    RingBufRead(pt_ring_buf, pucData, CAN_FRAME_SIZE);
+    //pucData = p->payload;
 
     //
     // Fill in the packet header.
     //
-    pucData[0] = 1;
-    pucData[1] = 2;
-    pucData[2] = 3;
-    pucData[3] = 4;
+    //pucData[0] = 1;
+    //pucData[1] = 2;
+    //pucData[2] = 3;
+    //pucData[3] = 4;
 
     err_t status;
     //RIT128x96x4StringDraw("Before send", 10, 20, 15);
