@@ -29,8 +29,8 @@ void display_ip_address(uint32_t ipaddr, uint32_t col, uint32_t row)
 
 void PENDSV_handler(void)
 {
-    UDP_send(&g_can_ringbuf);
-    HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_UNPEND_SV;                       // clear PendSV
+    UDP_send(&g_can_ringbuf);                                           // send CAN frames over UDP
+    HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_UNPEND_SV;                     // clear PendSV
 }
 
 
@@ -68,20 +68,19 @@ int main(void)
     {
         
         display_CAN_statistics(1,5,80);                                 // print some info to the OLED NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
-        //if( !RingBufEmpty(&g_can_ringbuf) )
-        //{   
-        //    volatile uint32_t used = RingBufUsed(&g_can_ringbuf);
-        //    usprintf(buffer, "Used: %u", used);
-        //    RIT128x96x4StringDraw(buffer, 5, 60, 15);
-        //}
 
         ulIPAddress = lwIPLocalIPAddrGet();
         if( (ulLastIPAddress != ulIPAddress) && (has_address == 0) )               
         {
             display_ip_address(ulIPAddress,1,70);
             ulLastIPAddress = ulIPAddress;
-            CAN_configure();                                                    // Enable the board for CAN processing
+            CAN_configure();                                            // Enable the board for CAN processing
             has_address = 1;
+        }
+        if (has_address)
+        {
+
+
         }
         
     }

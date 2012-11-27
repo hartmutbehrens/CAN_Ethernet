@@ -25,15 +25,13 @@ void UDP_send(tRingBufObject *pt_ring_buf)
     struct pbuf *p;
 
     pcb = udp_new();
-    uint32_t size = RingBufUsed(pt_ring_buf);
-    usprintf(print_buf, "size = %u  ", size);
-    RIT128x96x4StringDraw(print_buf, 10, 30, 15);
-    if (pcb == NULL) 
+    if (!pcb) 
     {
         RIT128x96x4StringDraw("Err: No mem for pcb", 5, 20, 15); 
         return;  
     }
     
+    uint32_t size = RingBufUsed(pt_ring_buf);
     p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);            // Allocate a pbuf for this data packet.
     if(!p)
     {
