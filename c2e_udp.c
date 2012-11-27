@@ -5,7 +5,6 @@
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
 #include "config.h"
-#include "c2e_can.h"
 #include "c2e_udp.h"
 
 void UDP_start(void)

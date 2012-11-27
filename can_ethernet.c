@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include "inc/hw_ints.h"
 #include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
@@ -12,6 +11,7 @@
 #include "drivers/rit128x96x4.h"
 #include "can_ethernet.h"
 #include "config.h"
+#include "c2e_can.h"
 #include "c2e_eth.h"
 #include "c2e_udp.h"
 

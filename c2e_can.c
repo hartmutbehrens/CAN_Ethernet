@@ -9,7 +9,6 @@
 #include "utils/ringbuf.h"
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
-
 #include "c2e_can.h"
 
 can_struct_t CAN_data;                                                         // structure to hold CAN RX and TX data
