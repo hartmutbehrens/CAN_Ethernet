@@ -7,47 +7,33 @@
 #include "c2e_can.h"
 #include "c2e_udp.h"
 
-static char print_buf[64];
-void UDP_start(void)
-{
-	struct udp_pcb *pcb;
-    pcb = udp_new();
-    udp_bind(pcb, IP_ADDR_ANY, 23);
-    udp_connect(pcb, IP_ADDR_ANY, 23);
-    udp_recv(pcb, UDP_receive, NULL);										// set callback for incoming UDP data
-    
-}
-
 void UDP_send(tRingBufObject *pt_ring_buf)
 {
     struct udp_pcb *pcb;
-    unsigned char *pucData;
     struct pbuf *p;
 
     pcb = udp_new();
     if (!pcb) 
     {
-        RIT128x96x4StringDraw("Err: No mem for pcb", 5, 20, 15); 
+        RIT128x96x4StringDraw("Err: No mem for PCB", 5, 20, 15); 
         return;  
     }
     
     uint32_t size = RingBufUsed(pt_ring_buf);
-    p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);            // Allocate a pbuf for this data packet.
+    p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);             // Allocate a pbuf for this data packet.
     if(!p)
     {
-        RIT128x96x4StringDraw("Err: No mem for p", 5, 30, 15);
+        RIT128x96x4StringDraw("Err: No mem for P", 5, 30, 15);
         return;
     }
-    udp_bind(pcb, IP_ADDR_ANY, 23);
+    udp_bind(pcb, IP_ADDR_ANY, 23);                             // broadcast message for now
 
-    pucData = (unsigned char *)p->payload;                  // Get a pointer to the data packet.
-    RingBufRead(pt_ring_buf, pucData, size);
     
-    err_t status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, 23);
+    RingBufRead(pt_ring_buf, p->payload, size);                 // read ringbuffer contents into data packet
     
-    usprintf(print_buf, "status = %u  ", status);
-    RIT128x96x4StringDraw(print_buf, 10, 40, 15);
-    pbuf_free(p);       // Free the pbuf.
+    // err_t status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, 23);   // send the message
+    udp_sendto(pcb, p, IP_ADDR_BROADCAST, 23);   // send the message
+    pbuf_free(p);                                               // Free the pbuf.
     udp_remove(pcb);
 }
 
