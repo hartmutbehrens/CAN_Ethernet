@@ -46,7 +46,7 @@ int main(void)
     // Initialize the OLED display to run at 1MHz
     RIT128x96x4Init(1000000);    
     RIT128x96x4Enable(1000000);
-    RIT128x96x4StringDraw("CAN2ETH", 10, 10, 15);                       // Say Hello
+    RIT128x96x4StringDraw("CAN2ETH", 5, 10, 15);                       // Say Hello
 
     RingBufInit(&g_can_ringbuf, ring_rxbuf, sizeof(ring_rxbuf));        // initialize ring buffer to receive CAN frames
 
