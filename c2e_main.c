@@ -64,6 +64,7 @@ int main(void)
     
     static uint32_t ulLastIPAddress = 0;
     static uint32_t has_address = 0;
+    static uint32_t has_gateway = 0;
     uint32_t ulIPAddress;
     while (1)                                                           // loop forever
     {
@@ -75,13 +76,16 @@ int main(void)
         {
             display_ip_address(ulIPAddress,1,70);
             ulLastIPAddress = ulIPAddress;
-            CAN_configure();                                            // Enable the board for CAN processing
             has_address = 1;
         }
-        if (has_address)
+        if ( (has_address == 1) && (has_gateway == 0) )
         {
+            //CAN_configure();                                            // Enable the board for CAN processing
 
-
+        }
+        if (has_gateway)
+        {
+            
         }
         
     }

@@ -53,9 +53,7 @@ void CAN_handler(void)
         }
 
         int offset = status-9;                                                             // offset into buffer to locate receive data
-        //num.n = CAN_data.rx_msg_object.ulMsgID;                                            // assign to union with a view to converting to unsigned char
         uint32_to_uchar(&frame[0], CAN_data.rx_msg_object.ulMsgID);
-        //memcpy(&frame[0], &num.bytes[0], 4);                                               // copy CAN ID into frame
         memcpy(&frame[4], &CAN_data.rx_msg_object.pucMsgData[offset*8], 8 );               // copy CAN data into frame
         frame[EXT_FLAG_POS] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
         frame[RTR_FLAG_POS] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
