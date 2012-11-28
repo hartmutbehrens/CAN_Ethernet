@@ -9,10 +9,10 @@
 #include "utils/ustdlib.h"
 #include "utils/ringbuf.h"
 #include "drivers/rit128x96x4.h"
-#include "can_ethernet.h"
 #include "config.h"
 #include "c2e_can.h"
 #include "c2e_eth.h"
+#include "c2e_main.h"
 #include "c2e_udp.h"
 
 static unsigned char ring_rxbuf[RING_BUF_SIZE];

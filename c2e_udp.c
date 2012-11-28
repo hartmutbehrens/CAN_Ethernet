@@ -6,6 +6,7 @@
 #include "drivers/rit128x96x4.h"
 #include "config.h"
 #include "c2e_udp.h"
+#include "c2e_utils.h"
 
 void UDP_start(void)
 {
@@ -22,8 +23,7 @@ void UDP_send(tRingBufObject *pt_ring_buf)
     struct udp_pcb *pcb;
     unsigned char *data;
     struct pbuf *p;
-    uint32_uchar_t num;
-
+   
     pcb = udp_new();
     if (!pcb) 
     {
@@ -31,20 +31,23 @@ void UDP_send(tRingBufObject *pt_ring_buf)
         return;  
     }
     
-    num.n = RingBufUsed(pt_ring_buf);
-    p = pbuf_alloc(PBUF_TRANSPORT, num.n+4, PBUF_RAM);             // Allocate a pbuf for this data packet.
+    
+    uint32_t size = RingBufUsed(pt_ring_buf);
+    
+    p = pbuf_alloc(PBUF_TRANSPORT, size+5, PBUF_RAM);             // Allocate a pbuf for this data packet.
     if(!p)
     {
         RIT128x96x4StringDraw("P", 30, 20, 15);
         return;
     }
-    udp_bind(pcb, IP_ADDR_ANY, 23);                             // broadcast message for now
+    udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);                    // bind to any address and specified port for TX
 
     data = (unsigned char *)p->payload;                      // Get a pointer to the data packet.
-    memcpy(&data[0], &num.bytes[0], 4);
-    RingBufRead(pt_ring_buf, &data[4], num.n);                 // read ringbuffer contents into data packet
+    data[0] = C2E_DATA; 
+    uint32_to_uchar(&data[1],size);
+    RingBufRead(pt_ring_buf, &data[5], size);                 // read ringbuffer contents into data packet
     
-    err_t status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, 23);   // send the message
+    err_t status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, UDP_PORT_RX);   // send the message
     if (status != 0)
     {
         RIT128x96x4StringDraw("SEND", 45, 20, 15);
@@ -53,6 +56,8 @@ void UDP_send(tRingBufObject *pt_ring_buf)
     pbuf_free(p);                                               // Free the pbuf.
     udp_remove(pcb);
 }
+
+
 
 //*****************************************************************************
 //

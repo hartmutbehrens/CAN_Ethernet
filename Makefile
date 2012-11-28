@@ -66,18 +66,19 @@ ${COMPILER}:
 #
 # Rules for building the project
 #
-${COMPILER}/can_ethernet.axf: ${COMPILER}/can_ethernet.o
+${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_main.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_can.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_eth.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_udp.o
+${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_utils.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/rit128x96x4.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/startup_${COMPILER}.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/lwiplib.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/ringbuf.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/ustdlib.o
 ${COMPILER}/can_ethernet.axf: ${ROOT}/driverlib/${COMPILER}-cm3/libdriver-cm3.a
-${COMPILER}/can_ethernet.axf: can_ethernet.ld
-SCATTERgcc_can_ethernet=can_ethernet.ld
+${COMPILER}/can_ethernet.axf: c2e_linker.ld
+SCATTERgcc_can_ethernet=c2e_linker.ld
 ENTRY_can_ethernet=RESET_handler
 
 #
