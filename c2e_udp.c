@@ -18,6 +18,11 @@ void UDP_start(void)
     
 }
 
+void gw_find_start()
+{
+    
+}
+
 void UDP_send(tRingBufObject *pt_ring_buf)
 {
     struct udp_pcb *pcb;

@@ -5,6 +5,7 @@
 #include "inc/hw_types.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/interrupt.h"
+#include "lwip/netif.h"
 #include "utils/lwiplib.h"
 #include "utils/ustdlib.h"
 #include "utils/ringbuf.h"
@@ -51,7 +52,7 @@ int main(void)
 
     RingBufInit(&g_can_ringbuf, ring_rxbuf, sizeof(ring_rxbuf));        // initialize ring buffer to receive CAN frames
     Eth_configure();                                                    // Enable Ethernet controller
-    CAN_configure();                                            // Enable the board for CAN processing
+    CAN_configure();                                                    // Enable the board for CAN processing
     IntMasterEnable();                                                  // Enable processor interrupts.
     IntPrioritySet(INT_CAN0, 0x00);                                     // Set CAN interrupt highest priority because messages to be sent via UDP are buffered
     IntPrioritySet(INT_ETH, 0x01);                                      // Set Eth interrupt priority slightly less than CAN interrupt
@@ -60,33 +61,23 @@ int main(void)
     unsigned char mac_address[8];                                       // buffer to hold MAC address
     get_mac_address(mac_address);                                       // get MAC address from Flash
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
+    struct netif *netif = netif_list;
 
-    
-    static uint32_t ulLastIPAddress = 0;
     static uint32_t has_address = 0;
-    static uint32_t has_gateway = 0;
-    uint32_t ulIPAddress;
+    //static uint32_t has_gateway = 0;
     while (1)                                                           // loop forever
     {
         
         display_CAN_statistics(1,5,80);                                 // print some info to the OLED NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
 
-        ulIPAddress = lwIPLocalIPAddrGet();
-        if( (ulLastIPAddress != ulIPAddress) && (has_address == 0) )               
+        
+        if ( (netif->ip_addr.addr) && (has_address == 0) )
         {
-            display_ip_address(ulIPAddress,1,70);
-            ulLastIPAddress = ulIPAddress;
+            display_ip_address(netif->ip_addr.addr,5,20);
             has_address = 1;
         }
-        if ( (has_address == 1) && (has_gateway == 0) )
-        {
-            
-
-        }
-        if (has_gateway)
-        {
-            
-        }
+        
+        
         
     }
 }
