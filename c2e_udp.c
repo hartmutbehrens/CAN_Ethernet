@@ -47,12 +47,14 @@ void UDP_send(tRingBufObject *pt_ring_buf)
     uint32_to_uchar(&data[1],size);
     RingBufRead(pt_ring_buf, &data[5], size);                 // read ringbuffer contents into data packet
     
+    /*
     err_t status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, UDP_PORT_RX);   // send the message
     if (status != 0)
     {
         RIT128x96x4StringDraw("SEND", 45, 20, 15);
         return;
     }
+    */
     pbuf_free(p);                                               // Free the pbuf.
     udp_remove(pcb);
 }

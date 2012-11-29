@@ -50,8 +50,8 @@ int main(void)
     RIT128x96x4StringDraw("CAN2ETH", 5, 10, 15);                       // Say Hello
 
     RingBufInit(&g_can_ringbuf, ring_rxbuf, sizeof(ring_rxbuf));        // initialize ring buffer to receive CAN frames
-
     Eth_configure();                                                    // Enable Ethernet controller
+    CAN_configure();                                            // Enable the board for CAN processing
     IntMasterEnable();                                                  // Enable processor interrupts.
     IntPrioritySet(INT_CAN0, 0x00);                                     // Set CAN interrupt highest priority because messages to be sent via UDP are buffered
     IntPrioritySet(INT_ETH, 0x01);                                      // Set Eth interrupt priority slightly less than CAN interrupt
@@ -80,7 +80,7 @@ int main(void)
         }
         if ( (has_address == 1) && (has_gateway == 0) )
         {
-            //CAN_configure();                                            // Enable the board for CAN processing
+            
 
         }
         if (has_gateway)
