@@ -14,7 +14,7 @@ void UDP_start_listen(struct netif *netif)
 	struct udp_pcb *pcb;
     pcb = udp_new();
     udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_RX);
-    udp_connect(pcb, IP_ADDR_ANY, UDP_PORT_RX);
+    udp_connect(pcb, IP_ADDR_ANY, UDP_PORT_TX);
     udp_recv(pcb, UDP_receive, netif);										// set callback for incoming UDP data
     
 }
