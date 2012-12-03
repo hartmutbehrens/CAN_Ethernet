@@ -14,8 +14,9 @@
 #define EXT_FLAG_POS 12                     // position of CAN message ID flag in CAN frame
 #define RTR_FLAG_POS 13                     // position of CAN remote transmission flag in CAN frame
 #define TRIGGER_THRESHOLD 1                 // number of received CAN frames required to trigger a UDP send
-#define C2E_REQUEST 1
+#define C2E_DISCOVER 1
 #define C2E_REPLY 2
-#define C2E_DATA 3
+#define C2E_ACK 3
+#define C2E_DATA 4
 
 #endif

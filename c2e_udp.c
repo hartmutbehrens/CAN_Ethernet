@@ -1,4 +1,5 @@
 #include <string.h>
+#include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
 #include "utils/lwiplib.h"
 #include "utils/ringbuf.h"
@@ -8,22 +9,22 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
-void UDP_start(void)
+void UDP_start_listen(struct netif *netif)
 {
 	struct udp_pcb *pcb;
     pcb = udp_new();
-    udp_bind(pcb, IP_ADDR_ANY, 23);
-    udp_connect(pcb, IP_ADDR_ANY, 23);
-    udp_recv(pcb, UDP_receive, NULL);										// set callback for incoming UDP data
+    udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_RX);
+    udp_connect(pcb, IP_ADDR_ANY, UDP_PORT_RX);
+    udp_recv(pcb, UDP_receive, netif);										// set callback for incoming UDP data
     
 }
 
-void gw_find_start()
+void gw_discover_start()
 {
-    
+    HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
 }
 
-void UDP_send(tRingBufObject *pt_ring_buf)
+void UDP_send_data(tRingBufObject *pt_ring_buf)
 {
     struct udp_pcb *pcb;
     unsigned char *data;
@@ -32,7 +33,7 @@ void UDP_send(tRingBufObject *pt_ring_buf)
     pcb = udp_new();
     if (!pcb) 
     {
-        RIT128x96x4StringDraw("PCB", 5, 20, 15); 
+        RIT128x96x4StringDraw("PCB", 5, 30, 15); 
         return;  
     }
     
@@ -42,7 +43,7 @@ void UDP_send(tRingBufObject *pt_ring_buf)
     p = pbuf_alloc(PBUF_TRANSPORT, size+5, PBUF_RAM);             // Allocate a pbuf for this data packet.
     if(!p)
     {
-        RIT128x96x4StringDraw("P", 30, 20, 15);
+        RIT128x96x4StringDraw("P", 30, 30, 15);
         return;
     }
     udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);                    // bind to any address and specified port for TX
@@ -56,10 +57,46 @@ void UDP_send(tRingBufObject *pt_ring_buf)
     err_t status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, UDP_PORT_RX);   // send the message
     if (status != 0)
     {
-        RIT128x96x4StringDraw("SEND", 45, 20, 15);
+        RIT128x96x4StringDraw("SEND", 45, 30, 15);
         return;
     }
     */
+    pbuf_free(p);                                               // Free the pbuf.
+    udp_remove(pcb);
+}
+
+void UDP_send_data2(unsigned char *message, uint32_t size)
+{
+    struct udp_pcb *pcb;
+    unsigned char *data;
+    struct pbuf *p;
+   
+    pcb = udp_new();
+    if (!pcb) 
+    {
+        RIT128x96x4StringDraw("PCB", 5, 30, 15); 
+        return;  
+    }
+    
+    p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);             // Allocate a pbuf for this data packet.
+    if(!p)
+    {
+        RIT128x96x4StringDraw("P", 30, 30, 15);
+        return;
+    }
+    udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);                    // bind to any address and specified port for TX
+
+    data = (unsigned char *)p->payload;                      // Get a pointer to the data packet.
+    memcpy(&data[0], &message[0], size);
+    
+    
+    err_t status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, UDP_PORT_RX);   // send the message
+    if (status != 0)
+    {
+        RIT128x96x4StringDraw("SEND", 45, 30, 15);
+        return;
+    }
+    
     pbuf_free(p);                                               // Free the pbuf.
     udp_remove(pcb);
 }
@@ -75,8 +112,10 @@ void UDP_send(tRingBufObject *pt_ring_buf)
 //*****************************************************************************
 void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port)
 {
-    //unsigned char *pucData;
+    //unsigned char *data;
     //uint32_t ulIdx;
+   // data = p->payload;
+    RIT128x96x4StringDraw("RX", 5, 40, 15);
 
 /*
     //
@@ -96,29 +135,12 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     //
     pbuf_free(p);
 
-    /*
-    //
-    // Allocate a new pbuf for sending the response.
-    //
-    p = pbuf_alloc(PBUF_TRANSPORT, sizeof(g_pucLocatorData), PBUF_RAM);
-    if(p == NULL)
-    {
-        return;
-    }
-
-    //
-    // Calcuate and fill in the checksum on the response packet.
-    //
-    for(ulIdx = 0, g_pucLocatorData[sizeof(g_pucLocatorData) - 1] = 0;
-        ulIdx < (sizeof(g_pucLocatorData) - 1); ulIdx++)
-    {
-        g_pucLocatorData[sizeof(g_pucLocatorData) - 1] -=
-            g_pucLocatorData[ulIdx];
-    }
+    
 
     //
     // Copy the response packet data into the pbuf.
     //
+    /*
     pucData = p->payload;
     for(ulIdx = 0; ulIdx < sizeof(g_pucLocatorData); ulIdx++)
     {

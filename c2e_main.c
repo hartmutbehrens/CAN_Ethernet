@@ -15,6 +15,7 @@
 #include "c2e_eth.h"
 #include "c2e_main.h"
 #include "c2e_udp.h"
+#include "c2e_utils.h"
 
 static unsigned char ring_rxbuf[RING_BUF_SIZE];
 tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
@@ -31,7 +32,15 @@ void display_ip_address(uint32_t ipaddr, uint32_t col, uint32_t row)
 
 void PENDSV_handler(void)
 {
-    UDP_send(&g_can_ringbuf);                                           // send CAN frames over UDP
+    //unsigned char message[19];
+    unsigned char message[1];
+    message[0] = C2E_DISCOVER;
+    //message[0] = C2E_DATA;
+    //uint32_t size = RingBufUsed(&g_can_ringbuf);
+    //uint32_to_uchar(&message[1],size);
+    //RingBufRead(&g_can_ringbuf, &message[5], size);
+    //UDP_send_data(&g_can_ringbuf);                                           // send CAN frames over UDP
+    UDP_send_data2(message, sizeof(message));
     HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_UNPEND_SV;                     // clear PendSV
 }
 
@@ -61,8 +70,9 @@ int main(void)
     unsigned char mac_address[8];                                       // buffer to hold MAC address
     get_mac_address(mac_address);                                       // get MAC address from Flash
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
-    struct netif *netif = netif_list;
 
+    struct netif *netif = netif_list;
+    UDP_start_listen(netif);
     static uint32_t has_address = 0;
     //static uint32_t has_gateway = 0;
     while (1)                                                           // loop forever
@@ -71,9 +81,10 @@ int main(void)
         display_CAN_statistics(1,5,80);                                 // print some info to the OLED NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
 
         
-        if ( (netif->ip_addr.addr) && (has_address == 0) )
+        if ( (netif->ip_addr.addr) && (has_address == 0) )              // show the IP address, once we have acquired one
         {
             display_ip_address(netif->ip_addr.addr,5,20);
+            gw_discover_start();
             has_address = 1;
         }
         

@@ -1,7 +1,20 @@
 #ifndef __C2E_UDP_H
 #define __C2E_UDP_H
+#include "lwip/udp.h"
 
-void UDP_send(tRingBufObject *pt_ring_buf);
+typedef struct
+{
+	 struct udp_pcb *pcb;
+	 struct pbuf *p_out;
+	 unsigned char size[4];
+	 unsigned char msg_type;
+	 unsigned char *msg_out;
+} udp_can_struct_t;
+
+void gw_discover_start();
+void UDP_send_data(tRingBufObject *pt_ring_buf);
+void UDP_send_data2(unsigned char * message, uint32_t size);
+void UDP_start_listen(struct netif *netif);
 void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port);
 
 #endif
