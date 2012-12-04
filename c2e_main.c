@@ -30,7 +30,7 @@ transition_t transition[] =                                                 // s
 {
     { ST_INIT, EV_POWERON, &ETH_init},
     { ST_ETHINIT, EV_POWERON, &CAN_init},
-    { ST_CANINIT, EV_POWERON, &enable_interrupts},
+    { ST_CANINIT, EV_POWERON, &INT_init},
     { ST_INTENABLED, EV_POWERON, &LWIP_init},
     { ST_LWIPINIT, EV_POWERON, &NETIF_init},
     { ST_NETIFINIT, EV_POWERON, &IPaddr_init},
@@ -55,7 +55,7 @@ static uint32_t get_next_event(void)
     return event;
 }
 
-static uint32_t enable_interrupts(void)
+static uint32_t INT_init(void)
 {
     IntMasterEnable();                                                  // Enable processor interrupts.
     IntPrioritySet(INT_CAN0, 0x00);                                     // Set CAN interrupt highest priority because messages to be sent via UDP are buffered
