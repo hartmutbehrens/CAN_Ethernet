@@ -92,7 +92,7 @@ static uint32_t NETIF_init(void)
     return ST_NETIFINIT;
 }
 
-static void has_ipaddr_changed(void)
+static void has_ipaddress_changed(void)
 {
     if (previous_ip != netif->ip_addr.addr)
     {
@@ -112,7 +112,7 @@ static uint32_t IPaddr_init(void)
 
 static uint32_t fsm_error(void)
 {
-    has_ipaddr_changed();
+    has_ipaddress_changed();
     display_CAN_statistics();
     //RIT128x96x4StringDraw("FSM ERROR", 5, 50, 15);
     return ST_ANY;
