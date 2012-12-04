@@ -34,7 +34,6 @@ transition_t transition[] =                                                 // s
     { ST_INTENABLED, EV_POWERON, &LWIP_init},
     { ST_LWIPINIT, EV_POWERON, &NETIF_init},
     { ST_NETIFINIT, EV_POWERON, &IPaddr_init},
-    { ST_HASIP, EV_IPCHANGED, &display_ip_address},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
     { ST_ANY, EV_ANY, &fsm_error}
 };
@@ -79,12 +78,18 @@ static uint32_t NETIF_init(void)
     return ST_NETIFINIT;
 }
 
+static void has_ipaddr_changed(void)
+{
+    if (previous_ip != netif->ip_addr.addr)
+    {
+        event = EV_IPCHANGED;
+    }
+}
+
 static uint32_t IPaddr_init(void)
 {
-
-    if ((netif->ip_addr.addr) && (previous_ip != netif->ip_addr.addr))
+    if (netif->ip_addr.addr)
     {
-        previous_ip = netif->ip_addr.addr;
         event = EV_IPCHANGED;
         return ST_HASIP;
     }
@@ -93,6 +98,7 @@ static uint32_t IPaddr_init(void)
 
 static uint32_t fsm_error(void)
 {
+    has_ipaddr_changed();
     display_CAN_statistics();
     //RIT128x96x4StringDraw("FSM ERROR", 5, 50, 15);
     return ST_ANY;
