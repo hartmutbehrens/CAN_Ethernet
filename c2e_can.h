@@ -16,9 +16,9 @@ typedef struct
     uint32_t bytes_transmitted;
 } can_struct_t;								// structure to hold CAN RX and TX data
 
-void display_CAN_statistics(uint32_t update_rate, uint32_t col, uint32_t row);
+uint32_t display_CAN_statistics(void);
 void CAN_handler(void);
-void CAN_configure(void);
+uint32_t CAN_init(void);
 int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, can_struct_t *CAN_data);
 
 #endif

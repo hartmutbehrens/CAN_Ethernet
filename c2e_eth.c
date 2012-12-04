@@ -9,11 +9,12 @@
 #include "driverlib/systick.h"
 #include "utils/lwiplib.h"
 
+#include "config.h"
 #include "c2e_eth.h"
 
 static volatile uint32_t systick_flag;								// flag for indicating that a SysTick has occured
 
-void Eth_configure(void)
+uint32_t ETH_init(void)
 {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_ETH);                          // Enable the Ethernet Controller.
     SysCtlPeripheralReset(SYSCTL_PERIPH_ETH);                           // Reset the Ethernet Controller.
@@ -24,6 +25,7 @@ void Eth_configure(void)
     SysTickPeriodSet(SysCtlClockGet() / SYSTICKHZ);                     // Configure SysTick for a periodic interrupt. Used by lwIP - NB the choice of this seems to be important e.g. lwIPgetLocalIPAddr returns wrong value 
     SysTickEnable();                                                    // TODO: investigate why SYSTICKNS doesn't seem to work
     SysTickIntEnable();
+    return ST_ETHINIT;
 }
 
 

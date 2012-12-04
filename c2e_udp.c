@@ -49,7 +49,7 @@ void UDP_send_data(tRingBufObject *pt_ring_buf)
     udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);                    // bind to any address and specified port for TX
 
     data = (unsigned char *)p->payload;                      // Get a pointer to the data packet.
-    data[0] = C2E_DATA; 
+    data[0] = ST_CANDATA; 
     uint32_to_uchar(&data[1],size);
     RingBufRead(pt_ring_buf, &data[5], size);                 // read ringbuffer contents into data packet
     

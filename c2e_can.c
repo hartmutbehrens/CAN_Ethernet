@@ -18,15 +18,16 @@ volatile uint32_t update_count = 0;                                     // print
 volatile uint32_t lost_message_count = 0;                               // lost CAN message count
 extern tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
 
-void display_CAN_statistics(uint32_t update_rate, uint32_t col, uint32_t row)
+uint32_t display_CAN_statistics(void)
 {
     static char print_buf[64];
-    if (update_count >= update_rate)
+    if (update_count >= CAN_UPDATERATE)
     {
         usprintf(print_buf, "%u / %u  ", lost_message_count, message_count);
-        RIT128x96x4StringDraw(print_buf, col, row, 15);
+        RIT128x96x4StringDraw(print_buf, 5, 80, 15);
         update_count = 0;                                   // reset the update count
     } 
+    return ST_ANY;
 }
 
 
@@ -78,7 +79,7 @@ void CAN_handler(void)
 }
 
 
-void CAN_configure(void)                                                // Enable the board for CAN processing
+uint32_t CAN_init(void)                                                // Enable the board for CAN processing
 {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);                        // Configure CAN 0 Pins.
     GPIOPinTypeCAN(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1);           // Configure CAN 0 Pins.
@@ -89,6 +90,7 @@ void CAN_configure(void)                                                // Enabl
     IntEnable(INT_CAN0);                                                // Enable interrupts for the CAN in the NVIC.
     CANEnable(CAN0_BASE);                                               // Take the CAN0 device out of INIT state.
     CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.    
+    return ST_CANINIT;
 }
 
 // This function configures the receive FIFO and should only be called once.
