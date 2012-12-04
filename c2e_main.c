@@ -28,7 +28,8 @@ volatile uint32_t previous_ip = 0;
 
 transition_t transition[] =                                                 // state machine transition
 {
-    { ST_INIT, EV_POWERON, &ETH_init},
+    { ST_INIT, EV_POWERON, &BOARD_init},
+    { ST_BOARDINIT, EV_POWERON, &ETH_init},
     { ST_ETHINIT, EV_POWERON, &CAN_init},
     { ST_CANINIT, EV_POWERON, &INT_init},
     { ST_INTENABLED, EV_POWERON, &LWIP_init},
@@ -53,6 +54,19 @@ static uint32_t display_ip_address(void)
 static uint32_t get_next_event(void)
 {
     return event;
+}
+static uint32_t BOARD_init(void)
+{
+    if(REVISION_IS_A2)                                                  // If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.  This is a workaround to allow the PLL to operate reliably.
+    {
+        SysCtlLDOSet(SYSCTL_LDO_2_75V);
+    }
+    
+    SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ);  // Set the clocking to run directly from the PLL at 50MHz.
+    RIT128x96x4Init(1000000);    
+    RIT128x96x4Enable(1000000);
+    RIT128x96x4StringDraw("CAN2ETH", 5, 10, 15);                       // Say Hello
+    return ST_BOARDINIT;
 }
 
 static uint32_t INT_init(void)
@@ -122,17 +136,6 @@ void PENDSV_handler(void)
 int main(void)
 {
     event = EV_POWERON;
-    if(REVISION_IS_A2)                                                  // If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.  This is a workaround to allow the PLL to operate reliably.
-    {
-        SysCtlLDOSet(SYSCTL_LDO_2_75V);
-    }
-    // Set the clocking to run directly from the PLL at 50MHz.
-    SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_8MHZ);
-    // Initialize the OLED display to run at 1MHz
-    RIT128x96x4Init(1000000);    
-    RIT128x96x4Enable(1000000);
-    RIT128x96x4StringDraw("CAN2ETH", 5, 10, 15);                       // Say Hello
-
     RingBufInit(&g_can_ringbuf, ring_rxbuf, sizeof(ring_rxbuf));        // initialize ring buffer to receive CAN frames
 
     state = ST_INIT;

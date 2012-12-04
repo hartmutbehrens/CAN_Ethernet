@@ -25,6 +25,7 @@ typedef struct
 // state machine state declarations
 #define ST_ANY -1 							// catch all state
 #define ST_INIT 0
+#define ST_BOARDINIT 1
 #define ST_ETHINIT 2						// Ethernet initialized
 #define ST_CANINIT 3						// CAN initialized
 #define ST_INTENABLED 4 					// Interrupts enabled
