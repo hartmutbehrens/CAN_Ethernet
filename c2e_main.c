@@ -134,25 +134,8 @@ int main(void)
     RIT128x96x4StringDraw("CAN2ETH", 5, 10, 15);                       // Say Hello
 
     RingBufInit(&g_can_ringbuf, ring_rxbuf, sizeof(ring_rxbuf));        // initialize ring buffer to receive CAN frames
-    /*
-    Eth_configure();                                                    // Enable Ethernet controller
-    CAN_configure();                                                    // Enable the board for CAN processing
-    IntMasterEnable();                                                  // Enable processor interrupts.
-    IntPrioritySet(INT_CAN0, 0x00);                                     // Set CAN interrupt highest priority because messages to be sent via UDP are buffered
-    IntPrioritySet(INT_ETH, 0x01);                                      // Set Eth interrupt priority slightly less than CAN interrupt
-    HWREG(NVIC_SYS_PRI2) = 0xff;                                        // Set PendSV interrupt to lowest priority
-
-    unsigned char mac_address[8];                                       // buffer to hold MAC address
-    get_mac_address(mac_address);                                       // get MAC address from Flash
-    lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
-
-    struct netif *netif = netif_list;
-    UDP_start_listen(netif);
-    static uint32_t has_address = 0;
-    */
 
     state = ST_INIT;
-    
     while (state != ST_TERM)                                            // run the state machine
     {
         event = get_next_event();
