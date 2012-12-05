@@ -135,9 +135,10 @@ void PENDSV_handler(void)
 int main(void)
 {
     unsigned char event; 
+    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH, EV_INITCAN, EV_INITINT, EV_INITLWIP};       //sequence of events to bring the board up and running
+    
     RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));        // initialize ring buffer to receive CAN frames
     RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
-    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH, EV_INITCAN, EV_INITINT, EV_INITLWIP};
     RingBufWrite(&g_event_ringbuf, &boot_sequence[0], 5);
 
     uint32_t state = ST_INIT;
