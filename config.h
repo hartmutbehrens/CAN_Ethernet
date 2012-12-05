@@ -16,7 +16,8 @@ typedef struct
 #define UDP_PORT_TX 11899
 #define CAN_FRAME_SIZE 14                   // size of CAN frame to be sent via UDP
 #define CAN_UPDATERATE 1 					// rate at which to display received CAN message updates
-#define RING_BUF_SIZE (CAN_FRAME_SIZE*160)  // size of ring buffer, accomodate up to 160 frames, probably a bit excessive
+#define CAN_RINGBUF_SIZE (CAN_FRAME_SIZE*160)  // size of ring buffer, accomodate up to 160 frames, probably a bit excessive
+#define EV_RINGBUF_SIZE 64  				// size of event ring buffer, accomodate up to 64 events
 #define CAN_FIFO_SIZE   (8 * 8)             // size of FIFO buffers allocated to the CAN controller - 8 messages can each hold a max of 8 bytes
 #define CAN_BITRATE 1000000                 // set CAN bitrate to 1Mbps
 #define EXT_FLAG_POS 12                     // position of CAN message ID flag in CAN frame
@@ -30,7 +31,6 @@ typedef struct
 #define ST_CANINIT 3						// CAN initialized
 #define ST_INTENABLED 4 					// Interrupts enabled
 #define ST_LWIPINIT 5						// lwIP initialized
-#define ST_NETIFINIT 6						// netif initialized
 #define ST_HASIP 7							// have IP address
 #define ST_GWDISCOVER 8
 #define ST_GWREPLY 9
@@ -41,6 +41,10 @@ typedef struct
 #define EV_ANY -1 							// catch all event
 #define EV_POWERON 0
 #define EV_IPCHANGED 1 							// IP address obtained 
-#define EV_IPDISPLAYED 2						// IP has been displayed
+#define EV_INITETH 2						// send the initialize ethernet event
+#define EV_INITCAN 3						// send the initialize CAN event
+#define EV_INITINT 4						// send the initialize interrupts event
+#define EV_INITLWIP 5						// send the initialize lwIP event
+#define EV_INITIP 7						// send the initialize lwIP event
 
 #endif

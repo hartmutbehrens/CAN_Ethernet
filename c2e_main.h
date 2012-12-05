@@ -7,8 +7,7 @@ static uint32_t fsm_error(void);									// catch all state machine function
 static uint32_t BOARD_init(void);									// initialize clock, power, display
 static uint32_t INT_init(void);										// Master interrupt enable
 static uint32_t LWIP_init(void);									// initialize lwIP
-static uint32_t NETIF_init(void);									// get netif
-static uint32_t IPaddr_init(void);									// get ip address
+void set_next_event(unsigned char event);							// set the next event
 void PENDSV_handler(void);											// PendSV interrup handler - causes UDP packets with embedded CAN frames to be sent. Triggered in SW when RingBuffer reaches a threshold.
 
 #endif

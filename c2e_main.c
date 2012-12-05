@@ -17,44 +17,56 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
-static unsigned char ring_rxbuf[RING_BUF_SIZE];
+static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                         // memory for CAN ring buffer
+static unsigned char g_event_buf[EV_RINGBUF_SIZE];
 tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
-char buffer[16];
-unsigned char frame[12];
-volatile struct netif *netif;
-volatile uint32_t state;
-volatile uint32_t event;
+tRingBufObject g_event_ringbuf;                                             // ring buffer to receive state machine events
+
+volatile struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
 
 transition_t transition[] =                                                 // state machine transition
 {
     { ST_INIT, EV_POWERON, &BOARD_init},
-    { ST_BOARDINIT, EV_POWERON, &ETH_init},
-    { ST_ETHINIT, EV_POWERON, &CAN_init},
-    { ST_CANINIT, EV_POWERON, &INT_init},
-    { ST_INTENABLED, EV_POWERON, &LWIP_init},
-    { ST_LWIPINIT, EV_POWERON, &NETIF_init},
-    { ST_NETIFINIT, EV_POWERON, &IPaddr_init},
+    { ST_ANY, EV_INITETH, &ETH_init},
+    { ST_ANY, EV_INITCAN, &CAN_init},
+    { ST_ANY, EV_INITINT, &INT_init},
+    { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
     { ST_ANY, EV_ANY, &fsm_error}
 };
-#define TRANSITIONS (sizeof(transition)/sizeof(*transition))
+#define TRANSITIONS (sizeof(transition)/sizeof(*transition)) 
 
 //display an lwIP address
 static uint32_t display_ip_address(void)
 {   
-    unsigned char *temp = (unsigned char *)&netif->ip_addr.addr;
+    char print_buf[16];
+    unsigned char *temp = (unsigned char *)&g_netif->ip_addr.addr;
     // Convert the IP Address into a string for display purposes
-    usprintf(buffer, "IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
-    RIT128x96x4StringDraw(buffer, 5, 20, 15);
-    event = EV_IPDISPLAYED;
+    usprintf(print_buf, "IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
+    RIT128x96x4StringDraw(print_buf, 5, 20, 15);
+    set_next_event(EV_ANY);
     return ST_ANY;
+}
+
+void set_next_event(unsigned char event)
+{
+   RingBufWriteOne(&g_event_ringbuf, event);  
 }
 
 static uint32_t get_next_event(void)
 {
-    return event;
+    if ( RingBufEmpty(&g_event_ringbuf) )
+    {
+        return EV_ANY;
+    }
+    else
+    {
+        unsigned char event=  RingBufReadOne(&g_event_ringbuf);
+        return event;
+    }
 }
+
 static uint32_t BOARD_init(void)
 {
     if(REVISION_IS_A2)                                                  // If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.  This is a workaround to allow the PLL to operate reliably.
@@ -83,38 +95,24 @@ static uint32_t LWIP_init(void)
     unsigned char mac_address[8];                                       // buffer to hold MAC address
     get_mac_address(mac_address);                                       // get MAC address from Flash
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
+    g_netif = netif_list;
     return ST_LWIPINIT;
-}
-
-static uint32_t NETIF_init(void)
-{
-    netif = netif_list;
-    return ST_NETIFINIT;
 }
 
 static void has_ipaddress_changed(void)
 {
-    if (previous_ip != netif->ip_addr.addr)
+    if (previous_ip != g_netif->ip_addr.addr)
     {
-        event = EV_IPCHANGED;
+        previous_ip = g_netif->ip_addr.addr;
+        set_next_event(EV_IPCHANGED);
     }
-}
-
-static uint32_t IPaddr_init(void)
-{
-    if (netif->ip_addr.addr)
-    {
-        event = EV_IPCHANGED;
-        return ST_HASIP;
-    }
-    return ST_NETIFINIT;
 }
 
 static uint32_t fsm_error(void)
 {
     has_ipaddress_changed();
     display_CAN_statistics();
-    //RIT128x96x4StringDraw("FSM ERROR", 5, 50, 15);
+    // RIT128x96x4StringDraw("FSM ERROR", 5, 50, 15);
     return ST_ANY;
 }
 
@@ -133,12 +131,16 @@ void PENDSV_handler(void)
 }
 
 
+
 int main(void)
 {
-    event = EV_POWERON;
-    RingBufInit(&g_can_ringbuf, ring_rxbuf, sizeof(ring_rxbuf));        // initialize ring buffer to receive CAN frames
+    unsigned char event; 
+    RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));        // initialize ring buffer to receive CAN frames
+    RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
+    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH, EV_INITCAN, EV_INITINT, EV_INITLWIP};
+    RingBufWrite(&g_event_ringbuf, &boot_sequence[0], 5);
 
-    state = ST_INIT;
+    uint32_t state = ST_INIT;
     while (state != ST_TERM)                                            // run the state machine
     {
         event = get_next_event();
