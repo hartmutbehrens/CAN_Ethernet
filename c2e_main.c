@@ -29,9 +29,11 @@ transition_t transition[] =                                                 // s
 {
     { ST_INIT, EV_POWERON, &BOARD_init},
     { ST_ANY, EV_INITETH, &ETH_init},
-    { ST_ANY, EV_INITCAN, &CAN_init},
+    
     { ST_ANY, EV_INITINT, &INT_init},
     { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
+    { ST_LWIPINIT, EV_GWFINDSTART, &GW_find_start},
+    { ST_FINDGW, EV_INITCAN, &CAN_init},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
     { ST_ANY, EV_ANY, &fsm_catchall}
 };
@@ -45,7 +47,6 @@ static uint32_t display_ip_address(void)
     // Convert the IP Address into a string for display purposes
     usprintf(print_buf, "IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
     RIT128x96x4StringDraw(print_buf, 5, 20, 15);
-    set_next_event(EV_ANY);
     return ST_ANY;
 }
 
@@ -122,13 +123,13 @@ void PENDSV_handler(void)
 {
     //unsigned char message[19];
     unsigned char message[1];
-    message[0] = ST_GWDISCOVER;
+    message[0] = ST_FINDGW;
     //message[0] = C2E_DATA;
     //uint32_t size = RingBufUsed(&g_can_ringbuf);
     //uint32_to_uchar(&message[1],size);
     //RingBufRead(&g_can_ringbuf, &message[5], size);
     //UDP_send_data(&g_can_ringbuf);                                           // send CAN frames over UDP
-    UDP_send_data2(message, sizeof(message));
+    UDP_send_msg(message, sizeof(message));
     HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_UNPEND_SV;                     // clear PendSV
 }
 
@@ -138,11 +139,11 @@ int main(void)
 {
     unsigned char event; 
     // static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH, EV_INITCAN, EV_INITINT, EV_INITLWIP};       //sequence of events to bring the board up and running
-    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_INITCAN};       //sequence of events to bring the board up and running
+    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_GWFINDSTART, EV_INITCAN };       //sequence of events to bring the board up and running
     
     RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));        // initialize ring buffer to receive CAN frames
     RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
-    RingBufWrite(&g_event_ringbuf, &boot_sequence[0], 5);
+    RingBufWrite(&g_event_ringbuf, &boot_sequence[0], 6);                       // NB NB NB NB !!!!!!!! check size argument
 
     uint32_t state = ST_INIT;
     while (state != ST_TERM)                                            // run the state machine
@@ -154,7 +155,10 @@ int main(void)
             {
                 if ((event == transition[i].event) || (EV_ANY == transition[i].event)) 
                 {
+                    
+                    
                     state = (transition[i].fn)();
+
                     break;
                 }
             }

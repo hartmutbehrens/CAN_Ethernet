@@ -19,9 +19,14 @@ void UDP_start_listen(struct netif *netif)
     
 }
 
-void gw_discover_start()
+uint32_t GW_find_start()
 {
-    HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
+    RIT128x96x4StringDraw("GW INIT", 5, 60, 15);
+    //unsigned char message[1];
+    //message[0] = ST_FINDGW;
+    //UDP_send_msg(message, sizeof(message));
+    return ST_FINDGW;
+    //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
 }
 
 void UDP_send_data(tRingBufObject *pt_ring_buf)
@@ -65,7 +70,7 @@ void UDP_send_data(tRingBufObject *pt_ring_buf)
     udp_remove(pcb);
 }
 
-void UDP_send_data2(unsigned char *message, uint32_t size)
+void UDP_send_msg(unsigned char *message, uint32_t size)
 {
     struct udp_pcb *pcb;
     unsigned char *data;

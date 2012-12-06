@@ -24,7 +24,7 @@ typedef struct
 #define RTR_FLAG_POS 13                     // position of CAN remote transmission flag in CAN frame
 #define TRIGGER_THRESHOLD 1                 // number of received CAN frames required to trigger a UDP send
 // state machine state declarations
-#define ST_ANY -1 							// catch all state
+#define ST_ANY 99 							// catch all state
 #define ST_INIT 0
 #define ST_BOARDINIT 1
 #define ST_ETHINIT 2						// Ethernet initialized
@@ -32,19 +32,19 @@ typedef struct
 #define ST_INTENABLED 4 					// Interrupts enabled
 #define ST_LWIPINIT 5						// lwIP initialized
 #define ST_HASIP 7							// have IP address
-#define ST_GWDISCOVER 8
+#define ST_FINDGW 8
 #define ST_GWREPLY 9
 #define ST_GWACK 10
 #define ST_CANDATA 11
-#define ST_TERM 99
+#define ST_TERM 98
 //state machine event declarations
-#define EV_ANY -1 							// catch all event
+#define EV_ANY 99 							// catch all event
 #define EV_POWERON 0
 #define EV_IPCHANGED 1 							// IP address obtained 
 #define EV_INITETH 2						// send the initialize ethernet event
 #define EV_INITCAN 3						// send the initialize CAN event
 #define EV_INITINT 4						// send the initialize interrupts event
 #define EV_INITLWIP 5						// send the initialize lwIP event
-#define EV_INITIP 7						// send the initialize lwIP event
+#define EV_GWFINDSTART 6 					// start looking for other CAN-Ethernet gateways
 
 #endif
