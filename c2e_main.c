@@ -33,7 +33,7 @@ transition_t transition[] =                                                 // s
     { ST_ANY, EV_INITINT, &INT_init},
     { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
-    { ST_ANY, EV_ANY, &fsm_error}
+    { ST_ANY, EV_ANY, &fsm_catchall}
 };
 #define TRANSITIONS (sizeof(transition)/sizeof(*transition)) 
 
@@ -96,6 +96,8 @@ static uint32_t LWIP_init(void)
     get_mac_address(mac_address);                                       // get MAC address from Flash
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
     g_netif = netif_list;
+    while (! g_netif->ip_addr.addr)                                     // wait for IP address
+    {  }
     return ST_LWIPINIT;
 }
 
@@ -108,7 +110,7 @@ static void has_ipaddress_changed(void)
     }
 }
 
-static uint32_t fsm_error(void)
+static uint32_t fsm_catchall(void)
 {
     has_ipaddress_changed();
     display_CAN_statistics();
@@ -135,7 +137,8 @@ void PENDSV_handler(void)
 int main(void)
 {
     unsigned char event; 
-    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH, EV_INITCAN, EV_INITINT, EV_INITLWIP};       //sequence of events to bring the board up and running
+    // static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH, EV_INITCAN, EV_INITINT, EV_INITLWIP};       //sequence of events to bring the board up and running
+    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_INITCAN};       //sequence of events to bring the board up and running
     
     RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));        // initialize ring buffer to receive CAN frames
     RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
