@@ -23,7 +23,7 @@ static unsigned char g_event_buf[EV_RINGBUF_SIZE];
 tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
 tRingBufObject g_event_ringbuf;                                             // ring buffer to receive state machine events
 
-volatile struct netif *g_netif;
+// volatile struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
 
 transition_t transition[] =                                                 // state machine transition
@@ -42,7 +42,8 @@ transition_t transition[] =                                                 // s
 static uint32_t display_ip_address(void)
 {   
     char print_buf[16];
-    unsigned char *temp = (unsigned char *)&g_netif->ip_addr.addr;
+    struct netif *netif = netif_list;
+    unsigned char *temp = (unsigned char *)&netif->ip_addr.addr;
     // Convert the IP Address into a string for display purposes
     usprintf(print_buf, "IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
     RIT128x96x4StringDraw(print_buf, 5, 20, 15);
@@ -98,18 +99,20 @@ static uint32_t LWIP_init(void)
     unsigned char mac_address[8];                                       // buffer to hold MAC address
     get_mac_address(mac_address);                                       // get MAC address from Flash
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
-    g_netif = netif_list;
-    while (! g_netif->ip_addr.addr)                                     // wait for IP address
-    {  }
+    //struct netif *netif = netif_list;
+    //g_netif = netif_list;
+    //while (! netif->ip_addr.addr)                                     // wait for IP address
+    //{  }
     UDP_start_listen();
     return ST_LWIPINIT;
 }
 
 static void has_ipaddress_changed(void)
 {
-    if (previous_ip != g_netif->ip_addr.addr)
+    struct netif *netif = netif_list;
+    if (previous_ip != netif->ip_addr.addr)
     {
-        previous_ip = g_netif->ip_addr.addr;
+        previous_ip = netif->ip_addr.addr;
         enqueue_event(EV_IPCHANGED);
     }
 }
