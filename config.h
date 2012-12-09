@@ -47,4 +47,9 @@ typedef struct
 #define EV_INITLWIP 5						// send the initialize lwIP event
 #define EV_GWFINDSTART 6 					// start looking for other CAN-Ethernet gateways
 
+#define SYSTICKHZ 100
+#define SYSTICKMS (1000 / SYSTICKHZ)
+#define SYSTICKUS (1000000 / SYSTICKHZ)
+#define SYSTICKNS (1000000000 / SYSTICKHZ)
+
 #endif

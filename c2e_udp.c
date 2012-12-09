@@ -21,10 +21,10 @@ void UDP_start_listen(struct netif *netif)
 
 uint32_t GW_find_start()
 {
-    RIT128x96x4StringDraw("GW INIT", 5, 60, 15);
-    //unsigned char message[1];
-    //message[0] = ST_FINDGW;
-    //UDP_send_msg(message, sizeof(message));
+   
+    unsigned char message[1];
+    message[0] = ST_FINDGW;
+    UDP_send_msg(message, sizeof(message));
     return ST_FINDGW;
     //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
 }

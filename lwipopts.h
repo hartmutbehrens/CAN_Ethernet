@@ -38,7 +38,7 @@
 // ---------- Stellaris / lwIP Port Options ----------
 //
 //*****************************************************************************
-//#define HOST_TMR_INTERVAL               100         // default is 0 NB: If enabled, calls function lwIPHostTimerHandler - could potentially conflict with other interrupts. Declare priorities?
+#define HOST_TMR_INTERVAL               (10 * 1000)         // default is 0 NB: If enabled, calls function lwIPHostTimerHandler - could potentially conflict with other interrupts. Declare priorities?
 //#define DHCP_EXPIRE_TIMER_MSECS         (10 * 1000)
 //#define INCLUDE_HTTPD_SSI
 //#define INCLUDE_HTTPD_CGI

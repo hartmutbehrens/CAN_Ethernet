@@ -2,6 +2,7 @@
 #include "inc/hw_memmap.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
+#include "drivers/rit128x96x4.h"
 #include "driverlib/ethernet.h"
 #include "driverlib/flash.h"
 #include "driverlib/gpio.h"
@@ -47,24 +48,5 @@ void get_mac_address(unsigned char *mac_address)						// Configure the hardware 
     mac_address[3] = ((user1 >>  0) & 0xff);
     mac_address[4] = ((user1 >>  8) & 0xff);
     mac_address[5] = ((user1 >> 16) & 0xff);
-}
-
-
-void SYSTICK_handler(void)												// SYSTICK interrupt handler
-{
-    //HWREGBITW(&systick_flag, FLAG_SYSTICK) = 1;                    	// Indicate that a SysTick interrupt has occurred.
-    lwIPTimer(SYSTICKMS);                                            	// Call the lwIP timer handler - eventually results in lwIPHostTimerHandler being called
-}
-
-void lwIPHostTimerHandler(void)											// This function is required by lwIP library to support any host-related timer functions.
-{																		// Define HOST_TMR_INTERVAL in lwipopts.h to use
-    static uint32_t ulLastIPAddress = 0;
-    uint32_t ulIPAddress;
-    ulIPAddress = lwIPLocalIPAddrGet();
-
-    if( ulLastIPAddress != ulIPAddress)			// If IP Address has not yet been assigned, update the display accordingly
-    {
-        ulLastIPAddress = ulIPAddress;
-    }    
 }
 

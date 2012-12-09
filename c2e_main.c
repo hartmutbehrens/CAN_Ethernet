@@ -3,8 +3,9 @@
 #include "inc/hw_types.h"
 #include "inc/hw_sysctl.h"
 #include "inc/hw_types.h"
-#include "driverlib/sysctl.h"
 #include "driverlib/interrupt.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/systick.h"
 #include "lwip/netif.h"
 #include "utils/lwiplib.h"
 #include "utils/ustdlib.h"
@@ -32,10 +33,10 @@ transition_t transition[] =                                                 // s
     
     { ST_ANY, EV_INITINT, &INT_init},
     { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
-    { ST_LWIPINIT, EV_GWFINDSTART, &GW_find_start},
+    { ST_ANY, EV_GWFINDSTART, &GW_find_start},
     { ST_FINDGW, EV_INITCAN, &CAN_init},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
-    { ST_ANY, EV_ANY, &fsm_catchall}
+    { ST_ANY, EV_ANY, &fsm_any}
 };
 
 //display an lwIP address
@@ -49,7 +50,7 @@ static uint32_t display_ip_address(void)
     return ST_ANY;
 }
 
-void set_next_event(unsigned char event)
+void enqueue_event(unsigned char event)
 {
    RingBufWriteOne(&g_event_ringbuf, event);  
 }
@@ -83,6 +84,9 @@ static uint32_t BOARD_init(void)
 
 static uint32_t INT_init(void)
 {
+    SysTickPeriodSet(SysCtlClockGet() / SYSTICKHZ);
+    SysTickEnable();
+    SysTickIntEnable();
     IntMasterEnable();                                                  // Enable processor interrupts.
     IntPrioritySet(INT_CAN0, 0x00);                                     // Set CAN interrupt highest priority because messages to be sent via UDP are buffered
     IntPrioritySet(INT_ETH, 0x01);                                      // Set Eth interrupt priority slightly less than CAN interrupt
@@ -106,16 +110,26 @@ static void has_ipaddress_changed(void)
     if (previous_ip != g_netif->ip_addr.addr)
     {
         previous_ip = g_netif->ip_addr.addr;
-        set_next_event(EV_IPCHANGED);
+        enqueue_event(EV_IPCHANGED);
     }
 }
 
-static uint32_t fsm_catchall(void)
+static uint32_t fsm_any(void)
 {
     has_ipaddress_changed();
     display_CAN_statistics();
     // RIT128x96x4StringDraw("FSM ERROR", 5, 50, 15);
     return ST_ANY;
+}
+
+void SYSTICK_handler(void)                                              // SYSTICK interrupt handler
+{
+    lwIPTimer(SYSTICKMS);                                               // Call the lwIP timer handler - eventually results in lwIPHostTimerHandler being called
+}
+
+void lwIPHostTimerHandler(void)                                         // This function is required by lwIP library to support any host-related timer functions.
+{
+     enqueue_event(EV_GWFINDSTART);
 }
 
 void PENDSV_handler(void)
@@ -146,6 +160,7 @@ int main(void)
     RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
     RingBufWrite(&g_event_ringbuf, &boot_sequence[0], sequence_size);                       // NB NB NB NB !!!!!!!! check size argument
 
+
     uint32_t state = ST_INIT;
     while (state != ST_TERM)                                            // run the state machine
     {
@@ -156,16 +171,12 @@ int main(void)
             {
                 if ((event == transition[i].event) || (EV_ANY == transition[i].event)) 
                 {
-                    
-                    
                     state = (transition[i].fn)();
-
                     break;
                 }
             }
         }
     }
-    //static uint32_t has_gateway = 0;
     /*
     while (1)                                                           // loop forever
     {
