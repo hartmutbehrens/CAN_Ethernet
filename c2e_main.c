@@ -30,7 +30,6 @@ transition_t transition[] =                                                 // s
 {
     { ST_INIT, EV_POWERON, &BOARD_init},
     { ST_ANY, EV_INITETH, &ETH_init},
-    
     { ST_ANY, EV_INITINT, &INT_init},
     { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
     { ST_ANY, EV_GWFINDSTART, &GW_find_start},
@@ -102,6 +101,7 @@ static uint32_t LWIP_init(void)
     g_netif = netif_list;
     while (! g_netif->ip_addr.addr)                                     // wait for IP address
     {  }
+    UDP_start_listen();
     return ST_LWIPINIT;
 }
 

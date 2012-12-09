@@ -15,7 +15,7 @@ typedef struct
 uint32_t GW_find_start();
 void UDP_send_data(tRingBufObject *pt_ring_buf);
 void UDP_send_msg(unsigned char * message, uint32_t size);
-void UDP_start_listen(struct netif *netif);
+void UDP_start_listen(void);
 void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port);
 
 #endif

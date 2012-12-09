@@ -9,17 +9,17 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
-void UDP_start_listen(struct netif *netif)
+void UDP_start_listen(void)
 {
 	struct udp_pcb *pcb;
     pcb = udp_new();
     udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_RX);
     udp_connect(pcb, IP_ADDR_ANY, UDP_PORT_TX);
-    udp_recv(pcb, UDP_receive, netif);										// set callback for incoming UDP data
+    udp_recv(pcb, UDP_receive, NULL);										// set callback for incoming UDP data
     
 }
 
-uint32_t GW_find_start()
+uint32_t GW_find_start(void)
 {
    
     unsigned char message[1];
@@ -120,7 +120,13 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     //unsigned char *data;
     //uint32_t ulIdx;
    // data = p->payload;
-    RIT128x96x4StringDraw("RX", 5, 40, 15);
+    char print_buf[16];
+    unsigned char *temp = (unsigned char *)addr;
+    // Convert the IP Address into a string for display purposes
+    usprintf(print_buf, "RX IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
+    RIT128x96x4StringDraw(print_buf, 5, 40, 15);
+    usprintf(print_buf, "RX PORT: %d", port);
+    RIT128x96x4StringDraw(print_buf, 5, 50, 15);
 
 /*
     //
