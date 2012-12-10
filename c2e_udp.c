@@ -117,16 +117,22 @@ void UDP_send_msg(unsigned char *message, uint32_t size)
 //*****************************************************************************
 void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port)
 {
-    //unsigned char *data;
+
+    unsigned char *data;
     //uint32_t ulIdx;
-   // data = p->payload;
+    data = p->payload;
+
     char print_buf[16];
     unsigned char *temp = (unsigned char *)addr;
     // Convert the IP Address into a string for display purposes
-    usprintf(print_buf, "RX IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
+    usprintf(print_buf, "GW IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
     RIT128x96x4StringDraw(print_buf, 5, 40, 15);
-    usprintf(print_buf, "RX PORT: %d", port);
+    usprintf(print_buf, "GW PORT: %d", port);
     RIT128x96x4StringDraw(print_buf, 5, 50, 15);
+    usprintf(print_buf, "Len: %d", p->len);
+    RIT128x96x4StringDraw(print_buf, 5, 60, 15);
+    usprintf(print_buf, "Data: %d", data[0]);
+    RIT128x96x4StringDraw(print_buf, 5, 70, 15);
 
 /*
     //
