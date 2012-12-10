@@ -16,11 +16,11 @@ can_struct_t CAN_data;                                                         /
 volatile uint32_t message_count = 0;                                    // CAN received message count
 volatile uint32_t update_count = 0;                                     // print CAN updates once this threshold is reached
 volatile uint32_t lost_message_count = 0;                               // lost CAN message count
+static char print_buf[64];
 extern tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
 
 uint32_t display_CAN_statistics(void)
-{
-    static char print_buf[64];
+{    
     if (update_count >= CAN_UPDATERATE)
     {
         usprintf(print_buf, "%u / %u  ", lost_message_count, message_count);

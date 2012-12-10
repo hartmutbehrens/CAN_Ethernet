@@ -18,10 +18,12 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
-static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                         // memory for CAN ring buffer
-static unsigned char g_event_buf[EV_RINGBUF_SIZE];
-tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
-tRingBufObject g_event_ringbuf;                                             // ring buffer to receive state machine events
+static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
+static unsigned char g_event_buf[EV_RINGBUF_SIZE];                       // memory for event ring buffer
+static unsigned char g_gateway_buf[GW_RINGBUF_SIZE];                     // memory for event ring buffer
+tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
+tRingBufObject g_event_ringbuf;                                          // ring buffer to receive state machine events
+tRingBufObject g_gw_ringbuf;                                             // ring buffer to store remote CAN gateway IP addresses
 
 volatile struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
@@ -151,14 +153,14 @@ void PENDSV_handler(void)
 int main(void)
 {
     unsigned char event; 
-    // static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH, EV_INITCAN, EV_INITINT, EV_INITLWIP};       //sequence of events to bring the board up and running
     static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_GWFINDSTART, EV_INITCAN };       //sequence of events to bring the board up and running
     uint32_t sequence_size = sizeof(boot_sequence)/sizeof(*boot_sequence);
     uint32_t transitions =  sizeof(transition)/sizeof(*transition); 
     
-    RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));        // initialize ring buffer to receive CAN frames
+    RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));          // initialize ring buffer to receive CAN frames
     RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
-    RingBufWrite(&g_event_ringbuf, &boot_sequence[0], sequence_size);                       // NB NB NB NB !!!!!!!! check size argument
+    RingBufInit(&g_gw_ringbuf, g_gateway_buf, sizeof(g_gateway_buf));        // initialize ring buffer to receive events
+    RingBufWrite(&g_event_ringbuf, &boot_sequence[0], sequence_size);       // write boot sequence
 
 
     uint32_t state = ST_INIT;

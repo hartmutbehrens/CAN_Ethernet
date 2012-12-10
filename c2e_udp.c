@@ -45,17 +45,17 @@ void UDP_send_data(tRingBufObject *pt_ring_buf)
     
     uint32_t size = RingBufUsed(pt_ring_buf);
     
-    p = pbuf_alloc(PBUF_TRANSPORT, size+5, PBUF_RAM);             // Allocate a pbuf for this data packet.
+    p = pbuf_alloc(PBUF_TRANSPORT, size+5, PBUF_RAM);         // Allocate a pbuf for this data packet.
     if(!p)
     {
         RIT128x96x4StringDraw("P", 30, 30, 15);
         return;
     }
-    udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);                    // bind to any address and specified port for TX
+    udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);                  // bind to any address and specified port for TX
 
-    data = (unsigned char *)p->payload;                      // Get a pointer to the data packet.
+    data = (unsigned char *)p->payload;                       // Get a pointer to the data packet.
     data[0] = ST_CANDATA; 
-    uint32_to_uchar(&data[1],size);
+    uint32_to_uchar(&data[1],size);                           // store size of message at data[1..4] 
     RingBufRead(pt_ring_buf, &data[5], size);                 // read ringbuffer contents into data packet
     
     /*
@@ -129,10 +129,8 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     RIT128x96x4StringDraw(print_buf, 5, 40, 15);
     usprintf(print_buf, "GW PORT: %d", port);
     RIT128x96x4StringDraw(print_buf, 5, 50, 15);
-    usprintf(print_buf, "Len: %d", p->len);
-    RIT128x96x4StringDraw(print_buf, 5, 60, 15);
     usprintf(print_buf, "Data: %d", data[0]);
-    RIT128x96x4StringDraw(print_buf, 5, 70, 15);
+    RIT128x96x4StringDraw(print_buf, 5, 60, 15);
 
 /*
     //
