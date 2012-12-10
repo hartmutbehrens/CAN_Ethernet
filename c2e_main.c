@@ -20,10 +20,9 @@
 
 static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
 static unsigned char g_event_buf[EV_RINGBUF_SIZE];                       // memory for event ring buffer
-static unsigned char g_gateway_buf[GW_RINGBUF_SIZE];                     // memory for event ring buffer
+
 tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
 tRingBufObject g_event_ringbuf;                                          // ring buffer to receive state machine events
-tRingBufObject g_gw_ringbuf;                                             // ring buffer to store remote CAN gateway IP addresses
 
 volatile struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
@@ -34,7 +33,7 @@ transition_t transition[] =                                               // sta
     { ST_ANY, EV_INITETH, &ETH_init},
     { ST_ANY, EV_INITINT, &INT_init},
     { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
-    { ST_ANY, EV_GWFINDSTART, &GW_find_start},
+    { ST_ANY, EV_GWFINDSTART, &gateway_find_start},
     { ST_FINDGW, EV_INITCAN, &CAN_init},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
     { ST_ANY, EV_ANY, &fsm_any}
@@ -159,7 +158,6 @@ int main(void)
     
     RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));          // initialize ring buffer to receive CAN frames
     RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
-    RingBufInit(&g_gw_ringbuf, g_gateway_buf, sizeof(g_gateway_buf));        // initialize ring buffer to receive events
     RingBufWrite(&g_event_ringbuf, &boot_sequence[0], sequence_size);       // write boot sequence
 
     uint32_t state = ST_INIT;

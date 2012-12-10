@@ -10,6 +10,8 @@
 #include "c2e_utils.h"
 
 static char print_buf[32];
+volatile uint32_t g_gateways[MAX_CAN_GATEWAYS] = {0,0,0,0};              // initialize known IP addresses of CAN gateways
+volatile uint32_t gw_count = 0;                                          // count of CAN gateways
 
 void UDP_start_listen(void)
 {
@@ -21,7 +23,36 @@ void UDP_start_listen(void)
     
 }
 
-uint32_t GW_find_start(void)
+//add a gateway IP address to the list of known gateways
+void add_gateway(struct ip_addr *addr)
+{
+    //first check if we already have this gateway
+    for (int i = 0; i < MAX_CAN_GATEWAYS; i++)
+    {
+        if (g_gateways[i] == addr->addr)
+        {
+            return;
+        }
+    }
+    // add gateway to array of known gateways, if we have space
+    if (gw_count < MAX_CAN_GATEWAYS)
+    {
+        g_gateways[gw_count] = addr->addr;
+        gw_count++;    
+    }
+    
+    for (int i = 0; i < gw_count; i++)
+    {
+        unsigned char *temp = (unsigned char *)&g_gateways[i];
+        // Convert the IP Address into a string for display purposes
+        usprintf(print_buf, "GW IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
+        RIT128x96x4StringDraw(print_buf, 5, 40+i*10, 15);    
+    }
+    
+    
+}
+
+uint32_t gateway_find_start(void)
 {
    
     unsigned char message[1];
@@ -123,16 +154,16 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     unsigned char *data;
     //uint32_t ulIdx;
     data = p->payload;
+    if (data[0] == ST_FINDGW)
+    {
+        add_gateway(addr);
+    }
 
     
-    unsigned char *temp = (unsigned char *)addr;
-    // Convert the IP Address into a string for display purposes
-    usprintf(print_buf, "GW IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
-    RIT128x96x4StringDraw(print_buf, 5, 40, 15);
-    usprintf(print_buf, "GW PORT: %d", port);
-    RIT128x96x4StringDraw(print_buf, 5, 50, 15);
-    usprintf(print_buf, "Data: %d", data[0]);
-    RIT128x96x4StringDraw(print_buf, 5, 60, 15);
+    
+    //usprintf(print_buf, "GW PORT: %d", port);
+    //RIT128x96x4StringDraw(print_buf, 5, 50, 15);
+    
 
 /*
     //

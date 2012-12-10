@@ -18,9 +18,9 @@ typedef struct
 #define CAN_UPDATERATE 1 					// rate at which to display received CAN message updates
 #define CAN_RINGBUF_SIZE (CAN_FRAME_SIZE*160)  // size of ring buffer, accomodate up to 160 frames, probably a bit excessive
 #define EV_RINGBUF_SIZE 64  				// size of event ring buffer, accomodate up to 64 events
-#define GW_RINGBUF_SIZE (8 * 4)				// store up to 8 gateway addresses
 #define CAN_FIFO_SIZE   (8 * 8)             // size of FIFO buffers allocated to the CAN controller - 8 messages can each hold a max of 8 bytes
 #define CAN_BITRATE 1000000                 // set CAN bitrate to 1Mbps
+#define MAX_CAN_GATEWAYS 4 					// number of CAN gateways to keep track of
 #define EXT_FLAG_POS 12                     // position of CAN message ID flag in CAN frame
 #define RTR_FLAG_POS 13                     // position of CAN remote transmission flag in CAN frame
 #define TRIGGER_THRESHOLD 1                 // number of received CAN frames required to trigger a UDP send
