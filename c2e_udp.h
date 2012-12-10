@@ -13,7 +13,7 @@ typedef struct
 } udp_can_struct_t;
 
 uint32_t gateway_find_start();
-void add_gateway(struct ip_addr *addr);
+void add_gateway(struct ip_addr gw_address);
 void UDP_send_data(tRingBufObject *pt_ring_buf);
 void UDP_send_msg(unsigned char * message, uint32_t size);
 void UDP_start_listen(void);

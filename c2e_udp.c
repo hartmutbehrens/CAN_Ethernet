@@ -10,7 +10,8 @@
 #include "c2e_utils.h"
 
 static char print_buf[32];
-volatile uint32_t g_gateways[MAX_CAN_GATEWAYS] = {0,0,0,0};              // initialize known IP addresses of CAN gateways
+//volatile uint32_t g_gateways[MAX_CAN_GATEWAYS] = {0,0,0,0};              // initialize known IP addresses of CAN gateways
+struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
 volatile uint32_t gw_count = 0;                                          // count of CAN gateways
 
 void UDP_start_listen(void)
@@ -18,28 +19,31 @@ void UDP_start_listen(void)
 	struct udp_pcb *pcb;
     pcb = udp_new();
     udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_RX);
-    udp_connect(pcb, IP_ADDR_ANY, UDP_PORT_TX);
+    //udp_connect(pcb, IP_ADDR_ANY, UDP_PORT_TX);
     udp_recv(pcb, UDP_receive, NULL);										// set callback for incoming UDP data
     
 }
 
 //add a gateway IP address to the list of known gateways
-void add_gateway(struct ip_addr *addr)
+void add_gateway(struct ip_addr gw_address)
 {
+    
     //first check if we already have this gateway
     for (int i = 0; i < MAX_CAN_GATEWAYS; i++)
     {
-        if (g_gateways[i] == addr->addr)
+        if (g_gateways[i].addr == gw_address.addr)
         {
             return;
         }
     }
+    
     // add gateway to array of known gateways, if we have space
     if (gw_count < MAX_CAN_GATEWAYS)
     {
-        g_gateways[gw_count] = addr->addr;
+        g_gateways[gw_count] = gw_address;
         gw_count++;    
     }
+    
     
     for (int i = 0; i < gw_count; i++)
     {
@@ -108,6 +112,7 @@ void UDP_send_msg(unsigned char *message, uint32_t size)
     struct udp_pcb *pcb;
     unsigned char *data;
     struct pbuf *p;
+    err_t status = 0;
    
     pcb = udp_new();
     if (!pcb) 
@@ -122,13 +127,31 @@ void UDP_send_msg(unsigned char *message, uint32_t size)
         RIT128x96x4StringDraw("P", 30, 30, 15);
         return;
     }
-    udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);                    // bind to any address and specified port for TX
+    
 
     data = (unsigned char *)p->payload;                      // Get a pointer to the data packet.
     memcpy(&data[0], &message[0], size);
+
+    status = udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);            // listen to any local IP address
+    if (status != 0)
+    {
+        RIT128x96x4StringDraw("BND", 60, 30, 15);
+        return;
+    } 
     
+    if (gw_count > 0)                                           // send to all known gateways
+    {
+        for (uint32_t i = 0; i < gw_count; i++)
+        {
+            status += udp_sendto(pcb, p,&g_gateways[i], UDP_PORT_RX);   // send the message to the remote gateway
+        }
+    }
+    else                                                        // no gateway known, so broadcast
+    {
+        //status += udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);                    // bind to any address and specified port for TX
+        status += udp_sendto(pcb, p, IP_ADDR_BROADCAST, UDP_PORT_RX);   // send the message
+    }
     
-    err_t status = udp_sendto(pcb, p, IP_ADDR_BROADCAST, UDP_PORT_RX);   // send the message
     if (status != 0)
     {
         RIT128x96x4StringDraw("SEND", 45, 30, 15);
@@ -156,7 +179,7 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     data = p->payload;
     if (data[0] == ST_FINDGW)
     {
-        add_gateway(addr);
+        add_gateway(*addr);
     }
 
     
