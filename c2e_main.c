@@ -28,7 +28,7 @@ tRingBufObject g_gw_ringbuf;                                             // ring
 volatile struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
 
-transition_t transition[] =                                                 // state machine transition
+transition_t transition[] =                                               // state machine transition
 {
     { ST_INIT, EV_POWERON, &BOARD_init},
     { ST_ANY, EV_INITETH, &ETH_init},
@@ -161,7 +161,6 @@ int main(void)
     RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
     RingBufInit(&g_gw_ringbuf, g_gateway_buf, sizeof(g_gateway_buf));        // initialize ring buffer to receive events
     RingBufWrite(&g_event_ringbuf, &boot_sequence[0], sequence_size);       // write boot sequence
-
 
     uint32_t state = ST_INIT;
     while (state != ST_TERM)                                            // run the state machine

@@ -9,6 +9,8 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
+static char print_buf[32];
+
 void UDP_start_listen(void)
 {
 	struct udp_pcb *pcb;
@@ -122,7 +124,7 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     //uint32_t ulIdx;
     data = p->payload;
 
-    char print_buf[16];
+    
     unsigned char *temp = (unsigned char *)addr;
     // Convert the IP Address into a string for display purposes
     usprintf(print_buf, "GW IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
