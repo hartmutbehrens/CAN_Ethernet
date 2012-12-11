@@ -21,6 +21,7 @@
 static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
 static unsigned char g_event_buf[EV_RINGBUF_SIZE];                       // memory for event ring buffer
 static uint32_t g_state;                                                 // current state 
+static char print_buf[32];
 
 tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
 tRingBufObject g_event_ringbuf;                                          // ring buffer to receive state machine events
@@ -34,7 +35,7 @@ transition_t transition[] =                                               // sta
     { ST_ANY, EV_INITETH, &ETH_init},
     { ST_ANY, EV_INITINT, &INT_init},
     { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
-    { ST_ANY, EV_INITCAN, &CAN_init},
+    { ST_LWIPINIT, EV_INITCAN, &CAN_init},
     { ST_ANY, EV_BROADCAST, &broadcast_presence},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
     { ST_ANY, EV_ANY, &fsm_any}
@@ -43,7 +44,6 @@ transition_t transition[] =                                               // sta
 //display an lwIP address
 static uint32_t display_ip_address(void)
 {   
-    char print_buf[16];
     unsigned char *temp = (unsigned char *)&g_netif->ip_addr.addr;
     // Convert the IP Address into a string for display purposes
     usprintf(print_buf, "IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
@@ -180,6 +180,8 @@ int main(void)
                 if ((event == transition[i].event) || (EV_ANY == transition[i].event)) 
                 {
                     g_state = (transition[i].fn)();
+                    //usprintf(print_buf, "STATE: %d", g_state);
+                    //RIT128x96x4StringDraw(print_buf, 5, 50, 15);
                     break;
                 }
             }
