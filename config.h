@@ -34,8 +34,7 @@ typedef struct
 #define ST_LWIPINIT 5						// lwIP initialized
 #define ST_HASIP 7							// have IP address
 #define ST_FINDGW 8
-#define ST_GWREPLY 9
-#define ST_GWACK 10
+#define ST_GWFOUND 9
 #define ST_CANDATA 11
 #define ST_TERM 98
 //state machine event declarations
@@ -46,7 +45,8 @@ typedef struct
 #define EV_INITCAN 3						// send the initialize CAN event
 #define EV_INITINT 4						// send the initialize interrupts event
 #define EV_INITLWIP 5						// send the initialize lwIP event
-#define EV_GWFINDSTART 6 					// start looking for other CAN-Ethernet gateways
+#define EV_BROADCAST 6 					    // send UDP broadcast message to announce presence
+#define EV_FOUNDGW 7
 
 #define SYSTICKHZ 100
 #define SYSTICKMS (1000 / SYSTICKHZ)

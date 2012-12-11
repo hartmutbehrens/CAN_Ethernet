@@ -10,9 +10,8 @@
 #include "c2e_utils.h"
 
 static char print_buf[32];
-//volatile uint32_t g_gateways[MAX_CAN_GATEWAYS] = {0,0,0,0};              // initialize known IP addresses of CAN gateways
 struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
-volatile uint32_t gw_count = 0;                                          // count of CAN gateways
+static volatile uint32_t gw_count = 0;                                          // count of CAN gateways
 
 void UDP_start_listen(void)
 {
@@ -52,16 +51,13 @@ void add_gateway(struct ip_addr gw_address)
         usprintf(print_buf, "GW IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
         RIT128x96x4StringDraw(print_buf, 5, 40+i*10, 15);    
     }
-    
-    
 }
 
-uint32_t gateway_find_start(void)
+uint32_t broadcast_presence(void)
 {
-   
     unsigned char message[1];
     message[0] = ST_FINDGW;
-    UDP_send_msg(message, sizeof(message));
+    UDP_send_msg(message, sizeof(message), IP_ADDR_BROADCAST);
     return ST_FINDGW;
     //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
 }
@@ -107,7 +103,7 @@ void UDP_send_data(tRingBufObject *pt_ring_buf)
     udp_remove(pcb);
 }
 
-void UDP_send_msg(unsigned char *message, uint32_t size)
+void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_address)
 {
     struct udp_pcb *pcb;
     unsigned char *data;
@@ -139,18 +135,7 @@ void UDP_send_msg(unsigned char *message, uint32_t size)
         return;
     } 
     
-    if (gw_count > 0)                                           // send to all known gateways
-    {
-        for (uint32_t i = 0; i < gw_count; i++)
-        {
-            status += udp_sendto(pcb, p,&g_gateways[i], UDP_PORT_RX);   // send the message to the remote gateway
-        }
-    }
-    else                                                        // no gateway known, so broadcast
-    {
-        //status += udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);                    // bind to any address and specified port for TX
-        status += udp_sendto(pcb, p, IP_ADDR_BROADCAST, UDP_PORT_RX);   // send the message
-    }
+    status = udp_sendto(pcb, p, ip_address, UDP_PORT_RX);   // send the message to the remote gateway
     
     if (status != 0)
     {

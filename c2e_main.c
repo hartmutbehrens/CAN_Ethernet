@@ -20,6 +20,7 @@
 
 static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
 static unsigned char g_event_buf[EV_RINGBUF_SIZE];                       // memory for event ring buffer
+static uint32_t g_state;                                                 // current state 
 
 tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
 tRingBufObject g_event_ringbuf;                                          // ring buffer to receive state machine events
@@ -33,8 +34,8 @@ transition_t transition[] =                                               // sta
     { ST_ANY, EV_INITETH, &ETH_init},
     { ST_ANY, EV_INITINT, &INT_init},
     { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
-    { ST_ANY, EV_GWFINDSTART, &gateway_find_start},
-    { ST_FINDGW, EV_INITCAN, &CAN_init},
+    { ST_ANY, EV_INITCAN, &CAN_init},
+    { ST_ANY, EV_BROADCAST, &broadcast_presence},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
     { ST_ANY, EV_ANY, &fsm_any}
 };
@@ -47,7 +48,7 @@ static uint32_t display_ip_address(void)
     // Convert the IP Address into a string for display purposes
     usprintf(print_buf, "IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
     RIT128x96x4StringDraw(print_buf, 5, 20, 15);
-    return ST_ANY;
+    return g_state;       //return previous state
 }
 
 void enqueue_event(unsigned char event)
@@ -102,8 +103,16 @@ static uint32_t LWIP_init(void)
     g_netif = netif_list;
     while (! g_netif->ip_addr.addr)                                     // wait for IP address
     {  }
+    enqueue_event(EV_IPCHANGED);
     UDP_start_listen();
     return ST_LWIPINIT;
+}
+
+void netif_status_change(struct netif *netif)
+{
+    RIT128x96x4StringDraw("status", 5, 50, 15);
+    enqueue_event(EV_IPCHANGED);
+    UDP_start_listen();
 }
 
 static void has_ipaddress_changed(void)
@@ -117,7 +126,7 @@ static void has_ipaddress_changed(void)
 
 static uint32_t fsm_any(void)
 {
-    has_ipaddress_changed();
+    //has_ipaddress_changed();
     display_CAN_statistics();
     // RIT128x96x4StringDraw("FSM ERROR", 5, 50, 15);
     return ST_ANY;
@@ -130,20 +139,20 @@ void SYSTICK_handler(void)                                              // SYSTI
 
 void lwIPHostTimerHandler(void)                                         // This function is required by lwIP library to support any host-related timer functions.
 {
-     enqueue_event(EV_GWFINDSTART);
+    enqueue_event(EV_BROADCAST);   
 }
 
 void PENDSV_handler(void)
 {
     //unsigned char message[19];
-    unsigned char message[1];
-    message[0] = ST_FINDGW;
+   // unsigned char message[1];
+    //message[0] = ST_FINDGW;
     //message[0] = C2E_DATA;
     //uint32_t size = RingBufUsed(&g_can_ringbuf);
     //uint32_to_uchar(&message[1],size);
     //RingBufRead(&g_can_ringbuf, &message[5], size);
     //UDP_send_data(&g_can_ringbuf);                                           // send CAN frames over UDP
-    UDP_send_msg(message, sizeof(message));
+    //UDP_send_msg(message, sizeof(message));
     HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_UNPEND_SV;                     // clear PendSV
 }
 
@@ -152,7 +161,7 @@ void PENDSV_handler(void)
 int main(void)
 {
     unsigned char event; 
-    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_GWFINDSTART, EV_INITCAN };       //sequence of events to bring the board up and running
+    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_INITCAN };       //sequence of events to bring the board up and running
     uint32_t sequence_size = sizeof(boot_sequence)/sizeof(*boot_sequence);
     uint32_t transitions =  sizeof(transition)/sizeof(*transition); 
     
@@ -160,36 +169,20 @@ int main(void)
     RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
     RingBufWrite(&g_event_ringbuf, &boot_sequence[0], sequence_size);       // write boot sequence
 
-    uint32_t state = ST_INIT;
-    while (state != ST_TERM)                                            // run the state machine
+    g_state = ST_INIT;
+    while (g_state != ST_TERM)                                            // run the state machine
     {
         event = get_next_event();
         for (int i = 0; i < transitions; i++) 
         {
-            if ((state == transition[i].state) || (ST_ANY == transition[i].state)) 
+            if ((g_state == transition[i].state) || (ST_ANY == transition[i].state)) 
             {
                 if ((event == transition[i].event) || (EV_ANY == transition[i].event)) 
                 {
-                    state = (transition[i].fn)();
+                    g_state = (transition[i].fn)();
                     break;
                 }
             }
         }
     }
-    /*
-    while (1)                                                           // loop forever
-    {
-        
-        display_CAN_statistics(1,5,80);                                 // print some info to the OLED NB: this uses up quite a bit of processing cycles, so use it sparingly - it should ideally not be put in a ISR
-
-        
-        if ( (netif->ip_addr.addr) && (has_address == 0) )              // show the IP address, once we have acquired one
-        {
-            display_ip_address(netif->ip_addr.addr,5,20);
-            gw_discover_start();
-            has_address = 1;
-        }   
-        
-    }
-    */
 }
