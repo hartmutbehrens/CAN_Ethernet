@@ -36,6 +36,7 @@ typedef struct
 #define ST_FINDGW 8
 #define ST_GWFOUND 9
 #define ST_CANDATA 11
+#define ST_DISPLAY 12
 #define ST_TERM 98
 //state machine event declarations
 #define EV_ANY 99 							// catch all event

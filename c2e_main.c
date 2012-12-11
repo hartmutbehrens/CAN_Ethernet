@@ -128,7 +128,7 @@ static uint32_t fsm_any(void)
 {
     //has_ipaddress_changed();
     display_CAN_statistics();
-    // RIT128x96x4StringDraw("FSM ERROR", 5, 50, 15);
+    //RIT128x96x4StringDraw("FSM ERROR", 5, 50, 15);
     return ST_ANY;
 }
 
