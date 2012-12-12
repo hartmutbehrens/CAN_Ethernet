@@ -7,5 +7,6 @@
 tRingBufObject g_event_ringbuf;                              		// ring buffer to receive state machine events
 
 void enqueue_event(tRingBufObject *ev_buf, unsigned char event);	// set the next event
+uint32_t get_next_event(tRingBufObject *ev_buf);					// get the next event
 
 #endif

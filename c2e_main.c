@@ -52,6 +52,7 @@ static uint32_t display_ip_address(void)
     return g_state;       //return previous state
 }
 
+/*
 static uint32_t get_next_event(void)
 {
     if ( RingBufEmpty(&g_event_ringbuf) )
@@ -64,6 +65,7 @@ static uint32_t get_next_event(void)
         return event;
     }
 }
+*/
 
 static uint32_t BOARD_init(void)
 {
@@ -163,7 +165,7 @@ int main(void)
     g_state = ST_INIT;
     while (g_state != ST_TERM)                                            // run the state machine
     {
-        event = get_next_event();
+        event = get_next_event(&g_event_ringbuf);
         for (int i = 0; i < transitions; i++) 
         {
             if ((g_state == transition[i].state) || (ST_ANY == transition[i].state)) 
