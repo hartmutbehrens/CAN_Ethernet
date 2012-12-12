@@ -85,9 +85,6 @@ static uint32_t BOARD_init(void)
 
 static uint32_t INT_init(void)
 {
-    SysTickPeriodSet(SysCtlClockGet() / SYSTICKHZ);
-    SysTickEnable();
-    SysTickIntEnable();
     IntMasterEnable();                                                  // Enable processor interrupts.
     IntPrioritySet(INT_CAN0, 0x00);                                     // Set CAN interrupt highest priority because messages to be sent via UDP are buffered
     IntPrioritySet(INT_ETH, 0x01);                                      // Set Eth interrupt priority slightly less than CAN interrupt
