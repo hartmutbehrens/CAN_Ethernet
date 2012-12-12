@@ -25,7 +25,7 @@ static uint32_t g_state;                                                 // curr
 static char print_buf[32];
 
 tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
-extern tRingBufObject g_event_ringbuf;                                          // ring buffer to receive state machine events
+extern tRingBufObject g_event_ringbuf;                                   // ring buffer to receive state machine events
 
 volatile struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
@@ -51,21 +51,6 @@ static uint32_t display_ip_address(void)
     RIT128x96x4StringDraw(print_buf, 5, 20, 15);
     return g_state;       //return previous state
 }
-
-/*
-static uint32_t get_next_event(void)
-{
-    if ( RingBufEmpty(&g_event_ringbuf) )
-    {
-        return EV_ANY;
-    }
-    else
-    {
-        unsigned char event=  RingBufReadOne(&g_event_ringbuf);
-        return event;
-    }
-}
-*/
 
 static uint32_t BOARD_init(void)
 {

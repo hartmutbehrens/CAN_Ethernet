@@ -6,12 +6,14 @@
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
 #include "config.h"
+#include "c2e_events.h"
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
 static char print_buf[32];
 struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
 static volatile uint32_t gw_count = 0;                                          // count of CAN gateways
+extern tRingBufObject g_event_ringbuf;                                   // ring buffer to receive state machine events
 
 void UDP_start_listen(void)
 {
@@ -40,7 +42,8 @@ void add_gateway(struct ip_addr gw_address)
     if (gw_count < MAX_CAN_GATEWAYS)
     {
         g_gateways[gw_count] = gw_address;
-        gw_count++; 
+        gw_count++;
+        enqueue_event(&g_event_ringbuf, EV_FOUNDGW);
     }
     
     
