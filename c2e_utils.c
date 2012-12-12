@@ -7,8 +7,3 @@ void uint32_to_uchar(unsigned char *data, uint32_t value)
     data[2] = (value >> 16) & 0xff;
     data[3] = (value >> 24) & 0xff;
 }
-
-void enqueue_event(tRingBufObject *ev_buf, unsigned char event)
-{
-   RingBufWriteOne(ev_buf, event);  
-}

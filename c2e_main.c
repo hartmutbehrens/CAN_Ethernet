@@ -14,6 +14,7 @@
 #include "config.h"
 #include "c2e_can.h"
 #include "c2e_eth.h"
+#include "c2e_events.h"
 #include "c2e_main.h"
 #include "c2e_udp.h"
 #include "c2e_utils.h"
@@ -24,7 +25,7 @@ static uint32_t g_state;                                                 // curr
 static char print_buf[32];
 
 tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
-tRingBufObject g_event_ringbuf;                                          // ring buffer to receive state machine events
+extern tRingBufObject g_event_ringbuf;                                          // ring buffer to receive state machine events
 
 volatile struct netif *g_netif;
 volatile uint32_t previous_ip = 0;

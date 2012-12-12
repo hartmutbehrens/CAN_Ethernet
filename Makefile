@@ -69,6 +69,7 @@ ${COMPILER}:
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_main.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_can.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_eth.o
+${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_events.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_udp.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/c2e_utils.o
 ${COMPILER}/can_ethernet.axf: ${COMPILER}/rit128x96x4.o
