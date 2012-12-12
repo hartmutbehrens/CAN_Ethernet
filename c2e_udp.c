@@ -40,7 +40,7 @@ void add_gateway(struct ip_addr gw_address)
     if (gw_count < MAX_CAN_GATEWAYS)
     {
         g_gateways[gw_count] = gw_address;
-        gw_count++;    
+        gw_count++; 
     }
     
     

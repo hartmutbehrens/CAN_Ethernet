@@ -35,25 +35,20 @@ transition_t transition[] =                                               // sta
     { ST_ANY, EV_INITETH, &ETH_init},
     { ST_ANY, EV_INITINT, &INT_init},
     { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
-    { ST_LWIPINIT, EV_INITCAN, &CAN_init},
-    { ST_ANY, EV_BROADCAST, &broadcast_presence},
+    { ST_LWIPINIT, EV_BROADCAST, &broadcast_presence},
+    { ST_FINDGW, EV_BROADCAST, &broadcast_presence},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
     { ST_ANY, EV_ANY, &fsm_any}
 };
 
 //display an lwIP address
 static uint32_t display_ip_address(void)
-{   
+{
     unsigned char *temp = (unsigned char *)&g_netif->ip_addr.addr;
     // Convert the IP Address into a string for display purposes
-    usprintf(print_buf, "IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
+    usprintf(print_buf, "IP: %d.%d.%d.%d    ", temp[0], temp[1], temp[2], temp[3]);
     RIT128x96x4StringDraw(print_buf, 5, 20, 15);
     return g_state;       //return previous state
-}
-
-void enqueue_event(unsigned char event)
-{
-   RingBufWriteOne(&g_event_ringbuf, event);  
 }
 
 static uint32_t get_next_event(void)
@@ -98,9 +93,6 @@ static uint32_t LWIP_init(void)
     get_mac_address(mac_address);                                       // get MAC address from Flash
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
     g_netif = netif_list;
-    while (! g_netif->ip_addr.addr)                                     // wait for IP address
-    {  }
-    enqueue_event(EV_IPCHANGED);
     UDP_start_listen();
     return ST_LWIPINIT;
 }
@@ -108,7 +100,7 @@ static uint32_t LWIP_init(void)
 void netif_status_change(struct netif *netif)
 {
     RIT128x96x4StringDraw("status", 5, 50, 15);
-    enqueue_event(EV_IPCHANGED);
+    enqueue_event(&g_event_ringbuf, EV_IPCHANGED);
     UDP_start_listen();
 }
 
@@ -117,13 +109,13 @@ static void has_ipaddress_changed(void)
     if (previous_ip != g_netif->ip_addr.addr)
     {
         previous_ip = g_netif->ip_addr.addr;
-        enqueue_event(EV_IPCHANGED);
+        enqueue_event(&g_event_ringbuf, EV_IPCHANGED);
     }
 }
 
 static uint32_t fsm_any(void)
 {
-    //has_ipaddress_changed();
+    has_ipaddress_changed();
     display_CAN_statistics();
     //RIT128x96x4StringDraw("FSM ERROR", 5, 50, 15);
     return ST_ANY;
@@ -132,11 +124,12 @@ static uint32_t fsm_any(void)
 void SYSTICK_handler(void)                                              // SYSTICK interrupt handler
 {
     lwIPTimer(SYSTICKMS);                                               // Call the lwIP timer handler - eventually results in lwIPHostTimerHandler being called
+    //lwIPTimer(SYSTICKUS);                                               // Call the lwIP timer handler - eventually results in lwIPHostTimerHandler being called
 }
 
 void lwIPHostTimerHandler(void)                                         // This function is required by lwIP library to support any host-related timer functions.
 {
-    enqueue_event(EV_BROADCAST);   
+    //enqueue_event(&g_event_ringbuf, EV_BROADCAST);   
 }
 
 void PENDSV_handler(void)
@@ -158,7 +151,7 @@ void PENDSV_handler(void)
 int main(void)
 {
     unsigned char event; 
-    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_INITCAN };       //sequence of events to bring the board up and running
+    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_BROADCAST };       //sequence of events to bring the board up and running
     uint32_t sequence_size = sizeof(boot_sequence)/sizeof(*boot_sequence);
     uint32_t transitions =  sizeof(transition)/sizeof(*transition); 
     
@@ -177,8 +170,8 @@ int main(void)
                 if ((event == transition[i].event) || (EV_ANY == transition[i].event)) 
                 {
                     g_state = (transition[i].fn)();
-                    //usprintf(print_buf, "STATE: %d", g_state);
-                    //RIT128x96x4StringDraw(print_buf, 5, 50, 15);
+                    usprintf(print_buf, "STATE: %d        ", g_state);
+                    RIT128x96x4StringDraw(print_buf, 5, 50, 15);
                     break;
                 }
             }
