@@ -10,9 +10,8 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
-static char print_buf[32];
 struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
-static volatile uint32_t gw_count = 0;                                          // count of CAN gateways
+volatile uint32_t g_gw_count = 0;                                          // count of CAN gateways
 extern tRingBufObject g_event_ringbuf;                                   // ring buffer to receive state machine events
 
 void UDP_start_listen(void)
@@ -39,20 +38,11 @@ void add_gateway(struct ip_addr gw_address)
     }
     
     // add gateway to array of known gateways, if we have space
-    if (gw_count < MAX_CAN_GATEWAYS)
+    if (g_gw_count < MAX_CAN_GATEWAYS)
     {
-        g_gateways[gw_count] = gw_address;
-        gw_count++;
+        g_gateways[g_gw_count] = gw_address;
+        g_gw_count++;
         enqueue_event(&g_event_ringbuf, EV_FOUNDGW);
-    }
-    
-    
-    for (int i = 0; i < gw_count; i++)
-    {
-        unsigned char *temp = (unsigned char *)&g_gateways[i];
-        // Convert the IP Address into a string for display purposes
-        usprintf(print_buf, "GW IP: %d.%d.%d.%d", temp[0], temp[1], temp[2], temp[3]);
-        RIT128x96x4StringDraw(print_buf, 5, 40+i*10, 15);    
     }
 }
 

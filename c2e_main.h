@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 static uint32_t display_ip_address(void);							// display an lwIP address
+static uint32_t display_gwip_address(void);							// display gateway IP addresses
 static uint32_t fsm_any(void);									    // catch all state machine function that executes when STATE = ANY and EVENT = ANY
 static uint32_t BOARD_init(void);									// initialize clock, power, display
 static uint32_t INT_init(void);										// Master interrupt enable

@@ -26,6 +26,8 @@ static char print_buf[32];
 
 tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
 extern tRingBufObject g_event_ringbuf;                                   // ring buffer to receive state machine events
+extern struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
+extern volatile uint32_t g_gw_count;
 
 volatile struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
@@ -39,8 +41,41 @@ transition_t transition[] =                                               // sta
     { ST_LWIPINIT, EV_BROADCAST, &broadcast_presence},
     { ST_FINDGW, EV_BROADCAST, &broadcast_presence},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
+    { ST_ANY, EV_FOUNDGW, &display_gwip_address},
     { ST_ANY, EV_ANY, &fsm_any}
 };
+
+int main(void)
+{
+    unsigned char event; 
+    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_BROADCAST };       //sequence of events to bring the board up and running
+    uint32_t sequence_size = sizeof(boot_sequence)/sizeof(*boot_sequence);
+    uint32_t transitions =  sizeof(transition)/sizeof(*transition); 
+    
+    RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));          // initialize ring buffer to receive CAN frames
+    RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
+    RingBufWrite(&g_event_ringbuf, &boot_sequence[0], sequence_size);       // write boot sequence
+
+    g_state = ST_INIT;
+    while (g_state != ST_TERM)                                            // run the state machine
+    {
+        event = get_next_event(&g_event_ringbuf);
+        for (int i = 0; i < transitions; i++) 
+        {
+            if ((g_state == transition[i].state) || (ST_ANY == transition[i].state)) 
+            {
+                if ((event == transition[i].event) || (EV_ANY == transition[i].event)) 
+                {
+                    g_state = (transition[i].fn)();
+                    //usprintf(print_buf, "STATE: %d        ", g_state);
+                    //RIT128x96x4StringDraw(print_buf, 5, 50, 15);
+                    break;
+                }
+            }
+        }
+    }
+}
+
 
 //display an lwIP address
 static uint32_t display_ip_address(void)
@@ -49,6 +84,19 @@ static uint32_t display_ip_address(void)
     // Convert the IP Address into a string for display purposes
     usprintf(print_buf, "IP: %d.%d.%d.%d    ", temp[0], temp[1], temp[2], temp[3]);
     RIT128x96x4StringDraw(print_buf, 5, 20, 15);
+    return g_state;       //return previous state
+}
+
+static uint32_t display_gwip_address(void)
+{
+    for (int i = 0; i < g_gw_count; i++)
+    {
+        unsigned char *temp = (unsigned char *)&g_gateways[i];
+        // Convert the IP Address into a string for display purposes
+        usprintf(print_buf, "GW %d: %d.%d.%d.%d    ", i, temp[0], temp[1], temp[2], temp[3]);
+        RIT128x96x4StringDraw(print_buf, 5, 40+i*10, 15);    
+    }
+    
     return g_state;       //return previous state
 }
 
@@ -136,33 +184,3 @@ void PENDSV_handler(void)
 
 
 
-int main(void)
-{
-    unsigned char event; 
-    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_BROADCAST };       //sequence of events to bring the board up and running
-    uint32_t sequence_size = sizeof(boot_sequence)/sizeof(*boot_sequence);
-    uint32_t transitions =  sizeof(transition)/sizeof(*transition); 
-    
-    RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));          // initialize ring buffer to receive CAN frames
-    RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
-    RingBufWrite(&g_event_ringbuf, &boot_sequence[0], sequence_size);       // write boot sequence
-
-    g_state = ST_INIT;
-    while (g_state != ST_TERM)                                            // run the state machine
-    {
-        event = get_next_event(&g_event_ringbuf);
-        for (int i = 0; i < transitions; i++) 
-        {
-            if ((g_state == transition[i].state) || (ST_ANY == transition[i].state)) 
-            {
-                if ((event == transition[i].event) || (EV_ANY == transition[i].event)) 
-                {
-                    g_state = (transition[i].fn)();
-                    usprintf(print_buf, "STATE: %d        ", g_state);
-                    RIT128x96x4StringDraw(print_buf, 5, 50, 15);
-                    break;
-                }
-            }
-        }
-    }
-}
