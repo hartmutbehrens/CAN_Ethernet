@@ -10,6 +10,7 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
+unsigned char MAGIC_ISO11898_ID[5] = {'1', '1', '8', '9', '8'};           // identifier for broadcast messages
 struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
 volatile uint32_t g_gw_count = 0;                                          // count of CAN gateways
 extern tRingBufObject g_event_ringbuf;                                   // ring buffer to receive state machine events
@@ -44,15 +45,6 @@ void add_gateway(struct ip_addr gw_address)
         g_gw_count++;
         enqueue_event(&g_event_ringbuf, EV_FOUNDGW);
     }
-}
-
-uint32_t broadcast_presence(void)
-{
-    unsigned char message[1];
-    message[0] = ST_FINDGW;
-    UDP_send_msg(message, sizeof(message), IP_ADDR_BROADCAST);
-    return ST_FINDGW;
-    //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
 }
 
 void UDP_send_data(tRingBufObject *pt_ring_buf)
@@ -153,9 +145,13 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     unsigned char *data;
     //uint32_t ulIdx;
     data = p->payload;
-    if (data[0] == ST_FINDGW)
+    //if (data[0] == ST_FINDGW)
+    //{
+    //    add_gateway(*addr);
+    //}
+    if (ustrncmp((const char *)data, (const char *)&MAGIC_ISO11898_ID, 5) == 0)
     {
-        add_gateway(*addr);
+       add_gateway(*addr); 
     }
 
     

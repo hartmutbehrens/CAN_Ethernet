@@ -19,6 +19,7 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
+extern unsigned char MAGIC_ISO11898_ID[5];
 static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
 static unsigned char g_event_buf[EV_RINGBUF_SIZE];                       // memory for event ring buffer
 static uint32_t g_state;                                                 // current state 
@@ -55,6 +56,12 @@ transition_t transition[] =                                               // sta
     { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
     { ST_LWIPINIT, EV_IPCHANGED, &handle_IP_change},
     { ST_LWIPINIT, EV_ANY, &wait},
+    { ST_IPCHANGED, EV_FOUNDGW, &handle_GW_change},
+    { ST_IPCHANGED, EV_BROADCAST, &broadcast_presence},
+    { ST_IPCHANGED, EV_ANY, &wait},
+    { ST_GWFOUND, EV_BROADCAST, &broadcast_presence},
+    { ST_GWFOUND, EV_ANY, &wait},
+    { ST_ANY, EV_BROADCAST, &broadcast_presence},
     { ST_ANY, EV_ANY, &fsm_any}
 };
 
@@ -89,6 +96,16 @@ int main(void)
     }
 }
 
+//broadcast presence
+static uint32_t broadcast_presence(void)
+{
+    //unsigned char message[1];
+    //message[0] = ST_FINDGW;
+    UDP_send_msg(MAGIC_ISO11898_ID, sizeof(MAGIC_ISO11898_ID), IP_ADDR_BROADCAST);
+    return g_state;
+    //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
+}
+
 // wait for stuff to happen
 static uint32_t wait(void)
 {
@@ -108,11 +125,19 @@ void display_ip_address(void)
 static uint32_t handle_IP_change(void)
 {
     display_ip_address();
+    UDP_start_listen();
     return ST_IPCHANGED;
 }
 
+// handle a addition of a gateway
+static uint32_t handle_GW_change(void)
+{
+    display_gw_address();
+    return ST_GWFOUND;
+}
+
 // display gateway IP address
-static uint32_t display_gw_address(void)
+void display_gw_address(void)
 {
     for (int i = 0; i < g_gw_count; i++)
     {
@@ -121,8 +146,6 @@ static uint32_t display_gw_address(void)
         usprintf(print_buf, "GW %d: %d.%d.%d.%d    ", i, temp[0], temp[1], temp[2], temp[3]);
         RIT128x96x4StringDraw(print_buf, 10, 30+i*10, 15);    
     }
-    
-    return g_state;       //return previous state
 }
 
 static uint32_t BOARD_init(void)
@@ -162,7 +185,6 @@ static uint32_t LWIP_init(void)
 void netif_status_change(struct netif *netif)
 {
     enqueue_event(&g_event_ringbuf, EV_IPCHANGED);
-    //UDP_start_listen();
 }
 
 static uint32_t fsm_any(void)
@@ -180,7 +202,8 @@ void SYSTICK_handler(void)                                              // SYSTI
 
 void lwIPHostTimerHandler(void)                                         // This function is required by lwIP library to support any host-related timer functions.
 {
-    //enqueue_event(&g_event_ringbuf, EV_BROADCAST);   
+    //RIT128x96x4StringDraw("lwip t", 5, 60, 15);
+    enqueue_event(&g_event_ringbuf, EV_BROADCAST);   
 }
 
 void PENDSV_handler(void)
