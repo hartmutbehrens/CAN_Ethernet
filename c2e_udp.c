@@ -143,13 +143,8 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 {
 
     unsigned char *data;
-    //uint32_t ulIdx;
     data = p->payload;
-    //if (data[0] == ST_FINDGW)
-    //{
-    //    add_gateway(*addr);
-    //}
-    if (ustrncmp((const char *)data, (const char *)&MAGIC_ISO11898_ID, 5) == 0)
+    if (ustrncmp((const char *)data, (const char *)&MAGIC_ISO11898_ID, sizeof(MAGIC_ISO11898_ID)) == 0)
     {
        add_gateway(*addr); 
     }

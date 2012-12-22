@@ -99,8 +99,6 @@ int main(void)
 //broadcast presence
 static uint32_t broadcast_presence(void)
 {
-    //unsigned char message[1];
-    //message[0] = ST_FINDGW;
     UDP_send_msg(MAGIC_ISO11898_ID, sizeof(MAGIC_ISO11898_ID), IP_ADDR_BROADCAST);
     return g_state;
     //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
@@ -202,7 +200,6 @@ void SYSTICK_handler(void)                                              // SYSTI
 
 void lwIPHostTimerHandler(void)                                         // This function is required by lwIP library to support any host-related timer functions.
 {
-    //RIT128x96x4StringDraw("lwip t", 5, 60, 15);
     enqueue_event(&g_event_ringbuf, EV_BROADCAST);   
 }
 
