@@ -19,7 +19,7 @@ volatile uint32_t lost_message_count = 0;                               // lost 
 static char print_buf[16];
 extern tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
 
-uint32_t display_CAN_statistics(void)
+void display_CAN_statistics(void)
 {    
     if (update_count >= CAN_UPDATERATE)
     {
@@ -27,7 +27,6 @@ uint32_t display_CAN_statistics(void)
         RIT128x96x4StringDraw(print_buf, 5, 80, 15);
         update_count = 0;                                   // reset the update count
     } 
-    return ST_ANY;
 }
 
 

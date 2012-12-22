@@ -59,8 +59,10 @@ transition_t transition[] =                                               // sta
     { ST_IPCHANGED, EV_FOUNDGW, &handle_GW_change},
     { ST_IPCHANGED, EV_BROADCAST, &broadcast_presence},
     { ST_IPCHANGED, EV_ANY, &wait},
+    { ST_GWFOUND, EV_INITCAN, &CAN_init},
     { ST_GWFOUND, EV_BROADCAST, &broadcast_presence},
     { ST_GWFOUND, EV_ANY, &wait},
+    { ST_CANINIT, EV_ANY, &wait},
     { ST_ANY, EV_BROADCAST, &broadcast_presence},
     { ST_ANY, EV_ANY, &fsm_any}
 };
@@ -107,6 +109,7 @@ static uint32_t broadcast_presence(void)
 // wait for stuff to happen
 static uint32_t wait(void)
 {
+    display_CAN_statistics();
     return g_state;
 }                  
 
@@ -130,7 +133,8 @@ static uint32_t handle_IP_change(void)
 // handle a addition of a gateway
 static uint32_t handle_GW_change(void)
 {
-    display_gw_address();
+    display_gw_address();                   //display gateway address
+    enqueue_event(&g_event_ringbuf, EV_INITCAN);
     return ST_GWFOUND;
 }
 
