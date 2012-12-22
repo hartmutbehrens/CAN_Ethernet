@@ -32,7 +32,7 @@ typedef struct
 #define ST_CANINIT 3						// CAN initialized
 #define ST_INTENABLED 4 					// Interrupts enabled
 #define ST_LWIPINIT 5						// lwIP initialized
-#define ST_HASIP 7							// have IP address
+#define ST_IPCHANGED 7						// have IP address
 #define ST_FINDGW 8
 #define ST_GWFOUND 9
 #define ST_CANDATA 11
@@ -41,13 +41,14 @@ typedef struct
 //state machine event declarations
 #define EV_ANY 99 							// catch all event
 #define EV_POWERON 0
-#define EV_IPCHANGED 1 							// IP address obtained 
+#define EV_IPCHANGED 1 						// IP address obtained 
 #define EV_INITETH 2						// send the initialize ethernet event
 #define EV_INITCAN 3						// send the initialize CAN event
 #define EV_INITINT 4						// send the initialize interrupts event
 #define EV_INITLWIP 5						// send the initialize lwIP event
 #define EV_BROADCAST 6 					    // send UDP broadcast message to announce presence
 #define EV_FOUNDGW 7
+#define EV_CHECKIP 8
 
 #define SYSTICKHZ 100
 #define SYSTICKMS (1000 / SYSTICKHZ)

@@ -29,9 +29,10 @@ extern tRingBufObject g_event_ringbuf;                                   // ring
 extern struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
 extern volatile uint32_t g_gw_count;
 
-volatile struct netif *g_netif;
+struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
 
+/*
 transition_t transition[] =                                               // state machine transition
 {
     { ST_INIT, EV_POWERON, &BOARD_init},
@@ -41,7 +42,19 @@ transition_t transition[] =                                               // sta
     { ST_LWIPINIT, EV_BROADCAST, &broadcast_presence},
     { ST_FINDGW, EV_BROADCAST, &broadcast_presence},
     { ST_ANY, EV_IPCHANGED, &display_ip_address},
-    { ST_ANY, EV_FOUNDGW, &display_gwip_address},
+    { ST_ANY, EV_FOUNDGW, &display_gw_address},
+    { ST_ANY, EV_ANY, &fsm_any}
+};
+*/
+
+transition_t transition[] =                                               // state machine transition
+{
+    { ST_INIT, EV_POWERON, &BOARD_init},
+    { ST_ANY, EV_INITETH, &ETH_init},
+    { ST_ANY, EV_INITINT, &INT_init},
+    { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
+    { ST_LWIPINIT, EV_IPCHANGED, &handle_IP_change},
+    { ST_LWIPINIT, EV_ANY, &wait},
     { ST_ANY, EV_ANY, &fsm_any}
 };
 
@@ -76,25 +89,37 @@ int main(void)
     }
 }
 
+// wait for stuff to happen
+static uint32_t wait(void)
+{
+    return g_state;
+}                  
 
 //display an lwIP address
-static uint32_t display_ip_address(void)
+void display_ip_address(void)
 {
     unsigned char *temp = (unsigned char *)&g_netif->ip_addr.addr;
     // Convert the IP Address into a string for display purposes
     usprintf(print_buf, "IP: %d.%d.%d.%d    ", temp[0], temp[1], temp[2], temp[3]);
     RIT128x96x4StringDraw(print_buf, 5, 20, 15);
-    return g_state;       //return previous state
 }
 
-static uint32_t display_gwip_address(void)
+// handle a change in IP address
+static uint32_t handle_IP_change(void)
+{
+    display_ip_address();
+    return ST_IPCHANGED;
+}
+
+// display gateway IP address
+static uint32_t display_gw_address(void)
 {
     for (int i = 0; i < g_gw_count; i++)
     {
         unsigned char *temp = (unsigned char *)&g_gateways[i];
         // Convert the IP Address into a string for display purposes
         usprintf(print_buf, "GW %d: %d.%d.%d.%d    ", i, temp[0], temp[1], temp[2], temp[3]);
-        RIT128x96x4StringDraw(print_buf, 5, 40+i*10, 15);    
+        RIT128x96x4StringDraw(print_buf, 10, 30+i*10, 15);    
     }
     
     return g_state;       //return previous state
@@ -129,31 +154,21 @@ static uint32_t LWIP_init(void)
     get_mac_address(mac_address);                                       // get MAC address from Flash
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
     g_netif = netif_list;
-    UDP_start_listen();
+    netif_set_status_callback(g_netif, &netif_status_change);                     // call C2E netif status callback
     return ST_LWIPINIT;
 }
 
+
 void netif_status_change(struct netif *netif)
 {
-    RIT128x96x4StringDraw("status", 5, 50, 15);
     enqueue_event(&g_event_ringbuf, EV_IPCHANGED);
-    UDP_start_listen();
-}
-
-static void has_ipaddress_changed(void)
-{
-    if (previous_ip != g_netif->ip_addr.addr)
-    {
-        previous_ip = g_netif->ip_addr.addr;
-        enqueue_event(&g_event_ringbuf, EV_IPCHANGED);
-    }
+    //UDP_start_listen();
 }
 
 static uint32_t fsm_any(void)
 {
-    has_ipaddress_changed();
-    display_CAN_statistics();
-    //RIT128x96x4StringDraw("FSM ERROR", 5, 50, 15);
+    //display_CAN_statistics();
+    RIT128x96x4StringDraw("FSM ERROR", 5, 60, 15);
     return ST_ANY;
 }
 

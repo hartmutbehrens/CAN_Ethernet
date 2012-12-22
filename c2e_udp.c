@@ -64,7 +64,7 @@ void UDP_send_data(tRingBufObject *pt_ring_buf)
     pcb = udp_new();
     if (!pcb) 
     {
-        RIT128x96x4StringDraw("PCB", 5, 30, 15); 
+        RIT128x96x4StringDraw("PCB", 5, 70, 15); 
         return;  
     }
     
@@ -74,7 +74,7 @@ void UDP_send_data(tRingBufObject *pt_ring_buf)
     p = pbuf_alloc(PBUF_TRANSPORT, size+5, PBUF_RAM);         // Allocate a pbuf for this data packet.
     if(!p)
     {
-        RIT128x96x4StringDraw("P", 30, 30, 15);
+        RIT128x96x4StringDraw("P", 30, 70, 15);
         return;
     }
     udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);                  // bind to any address and specified port for TX
@@ -106,17 +106,16 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
     pcb = udp_new();
     if (!pcb) 
     {
-        RIT128x96x4StringDraw("PCB", 5, 30, 15); 
+        RIT128x96x4StringDraw("PCB", 5, 70, 15); 
         return;  
     }
     
     p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);             // Allocate a pbuf for this data packet.
     if(!p)
     {
-        RIT128x96x4StringDraw("P", 30, 30, 15);
+        RIT128x96x4StringDraw("P", 30, 70, 15);
         return;
     }
-    
 
     data = (unsigned char *)p->payload;                      // Get a pointer to the data packet.
     memcpy(&data[0], &message[0], size);
@@ -124,15 +123,14 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
     status = udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);            // listen to any local IP address
     if (status != 0)
     {
-        RIT128x96x4StringDraw("BND", 60, 30, 15);
+        RIT128x96x4StringDraw("BND", 60, 70, 15);
         return;
     } 
     
     status = udp_sendto(pcb, p, ip_address, UDP_PORT_RX);   // send the message to the remote gateway
-    
     if (status != 0)
     {
-        RIT128x96x4StringDraw("SEND", 45, 30, 15);
+        RIT128x96x4StringDraw("SEND", 45, 70, 15);
         return;
     }
     
