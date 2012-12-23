@@ -10,7 +10,7 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
-unsigned char MAGIC_ISO11898_ID[5] = {'1', '1', '8', '9', '8'};           // identifier for broadcast messages
+unsigned char C2E_BROADCAST_ID[5] = {'C', '2', 'E', 'B', 'C'};           // identifier for broadcast messages
 struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
 volatile uint32_t g_gw_count = 0;                                          // count of CAN gateways
 extern tRingBufObject g_event_ringbuf;                                   // ring buffer to receive state machine events
@@ -144,7 +144,7 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 
     unsigned char *data;
     data = p->payload;
-    if (ustrncmp((const char *)data, (const char *)&MAGIC_ISO11898_ID, sizeof(MAGIC_ISO11898_ID)) == 0)
+    if (ustrncmp((const char *)data, (const char *)&C2E_BROADCAST_ID, sizeof(C2E_BROADCAST_ID)) == 0)
     {
        add_gateway(*addr); 
     }
