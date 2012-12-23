@@ -62,6 +62,7 @@ transition_t transition[] =                                               // sta
     { ST_GWFOUND, EV_INITCAN, &CAN_init},
     { ST_GWFOUND, EV_BROADCAST, &broadcast_presence},
     { ST_GWFOUND, EV_ANY, &wait},
+    { ST_CANINIT, EV_BROADCAST, &broadcast_presence},
     { ST_CANINIT, EV_ANY, &wait},
     { ST_ANY, EV_BROADCAST, &broadcast_presence},
     { ST_ANY, EV_ANY, &fsm_any}
