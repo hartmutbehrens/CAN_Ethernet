@@ -2,7 +2,6 @@
 #include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
 #include "utils/lwiplib.h"
-#include "utils/ringbuf.h"
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
 #include "config.h"
@@ -14,7 +13,6 @@ unsigned char C2E_BROADCAST_ID[5] = {'C', '2', 'E', 'B', 'C'};           // iden
 unsigned char C2E_DATA_ID[5] = {'C', '2', 'E', 'D', 'T'};           // identifier for broadcast messages
 struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
 volatile uint32_t g_gw_count = 0;                                          // count of CAN gateways
-extern tRingBufObject g_event_ringbuf;                                   // ring buffer to receive state machine events
 
 void UDP_start_listen(void)
 {
@@ -44,7 +42,7 @@ void add_gateway(struct ip_addr gw_address)
     {
         g_gateways[g_gw_count] = gw_address;
         g_gw_count++;
-        enqueue_event(&g_event_ringbuf, EV_FOUNDGW);
+        enqueue_event(EV_FOUNDGW);
     }
 }
 

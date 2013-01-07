@@ -1,20 +1,28 @@
 #include "config.h"
 #include "c2e_events.h"
 
-void enqueue_event(tRingBufObject *ev_buf, unsigned char event)
+static tRingBufObject g_event_ringbuf;                                     // ring buffer to receive state machine events
+static unsigned char g_event_buf[EV_RINGBUF_SIZE];                  // memory for event ring buffer
+
+void init_event_buffer(void)
 {
-   RingBufWriteOne(ev_buf, event);  
+    RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
 }
 
-uint32_t get_next_event(tRingBufObject *ev_buf)
+void enqueue_event(unsigned char event)
 {
-    if ( RingBufEmpty(ev_buf) )
+   RingBufWriteOne(&g_event_ringbuf, event);  
+}
+
+uint32_t get_next_event(void)
+{
+    if ( RingBufEmpty(&g_event_ringbuf) )
     {
         return EV_ANY;
     }
     else
     {
-        unsigned char event=  RingBufReadOne(ev_buf);
+        unsigned char event=  RingBufReadOne(&g_event_ringbuf);
         return event;
     }
 }

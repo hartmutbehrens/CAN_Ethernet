@@ -2,7 +2,6 @@
 #include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
 #include "inc/hw_sysctl.h"
-#include "inc/hw_types.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"
@@ -21,12 +20,11 @@
 
 extern unsigned char C2E_BROADCAST_ID[5];
 static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
-static unsigned char g_event_buf[EV_RINGBUF_SIZE];                       // memory for event ring buffer
+
 static uint32_t g_state;                                                 // current state 
 static char print_buf[32];
 
 tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
-extern tRingBufObject g_event_ringbuf;                                   // ring buffer to receive state machine events
 extern struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
 extern volatile uint32_t g_gw_count;
 
@@ -56,18 +54,15 @@ transition_t transition[] =                                               // sta
 int main(void)
 {
     unsigned char event; 
-    static unsigned char boot_sequence[] = {EV_POWERON, EV_INITETH,  EV_INITINT, EV_INITLWIP, EV_BROADCAST };       //sequence of events to bring the board up and running
-    uint32_t sequence_size = sizeof(boot_sequence)/sizeof(*boot_sequence);
     uint32_t transitions =  sizeof(transition)/sizeof(*transition); 
     
     RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));          // initialize ring buffer to receive CAN frames
-    RingBufInit(&g_event_ringbuf, g_event_buf, sizeof(g_event_buf));        // initialize ring buffer to receive events
-    RingBufWrite(&g_event_ringbuf, &boot_sequence[0], sequence_size);       // write boot sequence
+    load_boot_events();                                                     // load events required to boot the board
 
     g_state = ST_INIT;
     while (g_state != ST_TERM)                                              // run the state machine
     {
-        event = get_next_event(&g_event_ringbuf);
+        event = get_next_event();
         for (int i = 0; i < transitions; i++) 
         {
             if ((g_state == transition[i].state) || (ST_ANY == transition[i].state)) 
@@ -140,8 +135,18 @@ static uint32_t handle_IP_change(void)
 static uint32_t handle_GW_change(void)
 {
     display_gw_address();                   //display gateway address
-    enqueue_event(&g_event_ringbuf, EV_INITCAN);
+    enqueue_event(EV_INITCAN);
     return ST_GWFOUND;
+}
+
+static void load_boot_events(void)
+{
+    init_event_buffer();
+    enqueue_event(EV_POWERON);
+    enqueue_event(EV_INITETH);
+    enqueue_event(EV_INITINT);
+    enqueue_event(EV_INITLWIP);
+    enqueue_event(EV_BROADCAST);
 }
 
 static uint32_t BOARD_init(void)
@@ -180,7 +185,7 @@ static uint32_t LWIP_init(void)
 
 void netif_status_change(struct netif *netif)
 {
-    enqueue_event(&g_event_ringbuf, EV_IPCHANGED);
+    enqueue_event(EV_IPCHANGED);
 }
 
 static uint32_t fsm_any(void)
@@ -197,7 +202,7 @@ void SYSTICK_handler(void)                                              // SYSTI
 
 void lwIPHostTimerHandler(void)                                         // This function is required by lwIP library to support any host-related timer functions.
 {
-    enqueue_event(&g_event_ringbuf, EV_BROADCAST);   
+    enqueue_event(EV_BROADCAST);   
 }
 
 void PENDSV_handler(void)

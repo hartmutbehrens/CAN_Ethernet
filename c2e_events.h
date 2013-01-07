@@ -4,9 +4,8 @@
 #include "inc/hw_types.h"
 #include "utils/ringbuf.h"
 
-tRingBufObject g_event_ringbuf;                              		// ring buffer to receive state machine events
-
-void enqueue_event(tRingBufObject *ev_buf, unsigned char event);	// set the next event
-uint32_t get_next_event(tRingBufObject *ev_buf);					// get the next event
+void init_event_buffer(void);										// initialize the event ring buffer
+void enqueue_event(unsigned char event);	// set the next event
+uint32_t get_next_event(void);					// get the next event
 
 #endif

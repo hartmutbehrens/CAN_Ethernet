@@ -12,6 +12,7 @@ static uint32_t wait(void);											// wait for stuff to happen
 static uint32_t handle_IP_change(void);								// handle a change in IP address
 static uint32_t handle_GW_change(void);								// handle an addition of GW
 static uint32_t broadcast_presence(void);
+static void load_boot_events(void);									// enqueue the events required to boot the board
 
 void display_state(void);											// display state machine state
 void display_gw_address(void);							            // display gateway IP addresses
