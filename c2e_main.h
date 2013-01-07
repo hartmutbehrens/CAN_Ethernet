@@ -13,7 +13,8 @@ static uint32_t handle_IP_change(void);								// handle a change in IP address
 static uint32_t handle_GW_change(void);								// handle an addition of GW
 static uint32_t broadcast_presence(void);
 
-void display_gw_address(void);							// display gateway IP addresses
+void display_state(void);											// display state machine state
+void display_gw_address(void);							            // display gateway IP addresses
 void display_ip_address(void);										// display an lwIP address
 void netif_status_change(struct netif *netif);
 void SYSTICK_handler(void);

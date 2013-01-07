@@ -33,21 +33,6 @@ extern volatile uint32_t g_gw_count;
 struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
 
-/*
-transition_t transition[] =                                               // state machine transition
-{
-    { ST_INIT, EV_POWERON, &BOARD_init},
-    { ST_ANY, EV_INITETH, &ETH_init},
-    { ST_ANY, EV_INITINT, &INT_init},
-    { ST_INTENABLED, EV_INITLWIP, &LWIP_init},
-    { ST_LWIPINIT, EV_BROADCAST, &broadcast_presence},
-    { ST_FINDGW, EV_BROADCAST, &broadcast_presence},
-    { ST_ANY, EV_IPCHANGED, &display_ip_address},
-    { ST_ANY, EV_FOUNDGW, &display_gw_address},
-    { ST_ANY, EV_ANY, &fsm_any}
-};
-*/
-
 transition_t transition[] =                                               // state machine transition
 {
     { ST_INIT, EV_POWERON, &BOARD_init},
@@ -80,7 +65,7 @@ int main(void)
     RingBufWrite(&g_event_ringbuf, &boot_sequence[0], sequence_size);       // write boot sequence
 
     g_state = ST_INIT;
-    while (g_state != ST_TERM)                                            // run the state machine
+    while (g_state != ST_TERM)                                              // run the state machine
     {
         event = get_next_event(&g_event_ringbuf);
         for (int i = 0; i < transitions; i++) 
@@ -110,8 +95,21 @@ static uint32_t broadcast_presence(void)
 // wait for stuff to happen
 static uint32_t wait(void)
 {
+    display_state();
     display_CAN_statistics();
     return g_state;
+}
+
+// display gateway IP address
+void display_gw_address(void)
+{
+    for (int i = 0; i < g_gw_count; i++)
+    {
+        unsigned char *temp = (unsigned char *)&g_gateways[i];
+        // Convert the IP Address into a string for display purposes
+        usprintf(print_buf, "GW %d: %d.%d.%d.%d    ", i, temp[0], temp[1], temp[2], temp[3]);
+        RIT128x96x4StringDraw(print_buf, 10, 30+i*10, 15);    
+    }
 }                  
 
 //display an lwIP address
@@ -121,6 +119,13 @@ void display_ip_address(void)
     // Convert the IP Address into a string for display purposes
     usprintf(print_buf, "IP: %d.%d.%d.%d    ", temp[0], temp[1], temp[2], temp[3]);
     RIT128x96x4StringDraw(print_buf, 5, 20, 15);
+}
+
+//display state
+void display_state(void)
+{
+    usprintf(print_buf, "STATE: %d ", g_state);
+    RIT128x96x4StringDraw(print_buf, 5, 70, 15);
 }
 
 // handle a change in IP address
@@ -139,17 +144,7 @@ static uint32_t handle_GW_change(void)
     return ST_GWFOUND;
 }
 
-// display gateway IP address
-void display_gw_address(void)
-{
-    for (int i = 0; i < g_gw_count; i++)
-    {
-        unsigned char *temp = (unsigned char *)&g_gateways[i];
-        // Convert the IP Address into a string for display purposes
-        usprintf(print_buf, "GW %d: %d.%d.%d.%d    ", i, temp[0], temp[1], temp[2], temp[3]);
-        RIT128x96x4StringDraw(print_buf, 10, 30+i*10, 15);    
-    }
-}
+
 
 static uint32_t BOARD_init(void)
 {
