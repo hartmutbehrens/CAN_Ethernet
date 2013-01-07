@@ -11,6 +11,7 @@
 #include "c2e_utils.h"
 
 unsigned char C2E_BROADCAST_ID[5] = {'C', '2', 'E', 'B', 'C'};           // identifier for broadcast messages
+unsigned char C2E_DATA_ID[5] = {'C', '2', 'E', 'D', 'T'};           // identifier for broadcast messages
 struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
 volatile uint32_t g_gw_count = 0;                                          // count of CAN gateways
 extern tRingBufObject g_event_ringbuf;                                   // ring buffer to receive state machine events
@@ -98,14 +99,14 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
     pcb = udp_new();
     if (!pcb) 
     {
-        RIT128x96x4StringDraw("PCB", 5, 70, 15); 
+        RIT128x96x4StringDraw("PCB", 5, 60, 15); 
         return;  
     }
     
     p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);             // Allocate a pbuf for this data packet.
     if(!p)
     {
-        RIT128x96x4StringDraw("P", 30, 70, 15);
+        RIT128x96x4StringDraw("P", 30, 60, 15);
         return;
     }
 
@@ -115,19 +116,29 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
     status = udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);            // listen to any local IP address
     if (status != 0)
     {
-        RIT128x96x4StringDraw("BND", 60, 70, 15);
+        RIT128x96x4StringDraw("BND", 60, 60, 15);
         return;
     } 
     
     status = udp_sendto(pcb, p, ip_address, UDP_PORT_RX);   // send the message to the remote gateway
     if (status != 0)
     {
-        RIT128x96x4StringDraw("SEND", 45, 70, 15);
+        RIT128x96x4StringDraw("SND", 45, 60, 15);
         return;
     }
     
     pbuf_free(p);                                               // Free the pbuf.
     udp_remove(pcb);
+}
+
+static int message_starts_with(unsigned char *data, unsigned char *start_str)
+{
+    uint32_t size = sizeof(start_str)/sizeof(*start_str)
+    if (ustrncmp((const char *)data, (const char *)start_str, sizeof(size)) == 0)
+    {
+       return 1;
+    }
+    return 0;
 }
 
 
@@ -144,16 +155,14 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 
     unsigned char *data;
     data = p->payload;
-    if (ustrncmp((const char *)data, (const char *)&C2E_BROADCAST_ID, sizeof(C2E_BROADCAST_ID)) == 0)
+    if ( message_starts_with(data, C2E_BROADCAST_ID) )
     {
-       add_gateway(*addr); 
+        add_gateway(*addr);  
+    }
+    if ( message_starts_with(data, C2E_DATA_ID) )
+    {
     }
 
-    
-    
-    //usprintf(print_buf, "GW PORT: %d", port);
-    //RIT128x96x4StringDraw(print_buf, 5, 50, 15);
-    
 
 /*
     //

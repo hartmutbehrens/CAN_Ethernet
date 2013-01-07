@@ -144,8 +144,6 @@ static uint32_t handle_GW_change(void)
     return ST_GWFOUND;
 }
 
-
-
 static uint32_t BOARD_init(void)
 {
     if(REVISION_IS_A2)                                                  // If running on Rev A2 silicon, turn the LDO voltage up to 2.75V.  This is a workaround to allow the PLL to operate reliably.
@@ -175,7 +173,7 @@ static uint32_t LWIP_init(void)
     get_mac_address(mac_address);                                       // get MAC address from Flash
     lwIPInit(mac_address, 0, 0, 0, IPADDR_USE_DHCP);                    // Initialze the lwIP library, using DHCP.
     g_netif = netif_list;
-    netif_set_status_callback(g_netif, &netif_status_change);                     // call C2E netif status callback
+    netif_set_status_callback(g_netif, &netif_status_change);           // call C2E netif status callback - utils/lwiplib.c had to be changed to make this possible - netif_set_up(&g_sNetIF) commented out
     return ST_LWIPINIT;
 }
 
@@ -187,7 +185,6 @@ void netif_status_change(struct netif *netif)
 
 static uint32_t fsm_any(void)
 {
-    //display_CAN_statistics();
     RIT128x96x4StringDraw("FSM ERROR", 5, 60, 15);
     return ST_ANY;
 }
