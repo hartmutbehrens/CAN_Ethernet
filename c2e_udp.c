@@ -99,33 +99,26 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
     pcb = udp_new();
     if (!pcb) 
     {
-        RIT128x96x4StringDraw("PCB", 5, 60, 15); 
-        return;  
+        status++;
     }
     
     p = pbuf_alloc(PBUF_TRANSPORT, size, PBUF_RAM);             // Allocate a pbuf for this data packet.
     if(!p)
     {
-        RIT128x96x4StringDraw("P", 30, 60, 15);
-        return;
+        status++;
     }
 
     data = (unsigned char *)p->payload;                      // Get a pointer to the data packet.
     memcpy(&data[0], &message[0], size);
 
-    status = udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);            // listen to any local IP address
-    if (status != 0)
+    status = udp_bind(pcb, IP_ADDR_ANY, UDP_PORT_TX);       // listen to any local IP address
+    status = udp_sendto(pcb, p, ip_address, UDP_PORT_RX);   // send the message to the ip address
+
+    if (status > 0)
     {
-        RIT128x96x4StringDraw("BND", 60, 60, 15);
-        return;
-    } 
-    
-    status = udp_sendto(pcb, p, ip_address, UDP_PORT_RX);   // send the message to the remote gateway
-    if (status != 0)
-    {
-        RIT128x96x4StringDraw("SND", 45, 60, 15);
-        return;
+        RIT128x96x4StringDraw("UDP TX ERR", 5, 60, 15);    
     }
+    
     
     pbuf_free(p);                                               // Free the pbuf.
     udp_remove(pcb);
@@ -133,7 +126,7 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
 
 static int message_starts_with(unsigned char *data, unsigned char *start_str)
 {
-    uint32_t size = sizeof(start_str)/sizeof(*start_str)
+    uint32_t size = sizeof(start_str)/sizeof(*start_str);
     if (ustrncmp((const char *)data, (const char *)start_str, sizeof(size)) == 0)
     {
        return 1;
@@ -143,13 +136,9 @@ static int message_starts_with(unsigned char *data, unsigned char *start_str)
 
 
 
-//*****************************************************************************
-//
-// This function is called by the lwIP TCP/IP stack when it receives a UDP
-// packet from the discovery port.  It produces the response packet, which is
-// sent back to the querying client.
-//
-//*****************************************************************************
+
+// This function is called by the lwIP TCP/IP stack when it receives a UDP packet from the discovery port.  
+// It produces the response packet, which is sent back to the querying client.
 void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port)
 {
 
@@ -157,7 +146,7 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     data = p->payload;
     if ( message_starts_with(data, C2E_BROADCAST_ID) )
     {
-        add_gateway(*addr);  
+        add_gateway(*addr);                                 // found a gateway, so add it to the list of known gateways
     }
     if ( message_starts_with(data, C2E_DATA_ID) )
     {
