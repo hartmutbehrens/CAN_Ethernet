@@ -15,7 +15,6 @@ static uint32_t broadcast_presence(void);
 static void load_boot_events(void);									// enqueue the events required to boot the board
 
 void display_state(void);											// display state machine state
-void display_gw_address(void);							            // display gateway IP addresses
 void display_ip_address(void);										// display an lwIP address
 void netif_status_change(struct netif *netif);
 void SYSTICK_handler(void);

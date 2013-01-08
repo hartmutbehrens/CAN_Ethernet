@@ -18,15 +18,11 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
-extern unsigned char C2E_BROADCAST_ID[5];
-static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
-
-static uint32_t g_state;                                                 // current state 
 static char print_buf[32];
-
+static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
+static uint32_t g_state;                                                 // current state 
 tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
-extern struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
-extern volatile uint32_t g_gw_count;
+
 
 struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
@@ -82,7 +78,7 @@ int main(void)
 //broadcast presence
 static uint32_t broadcast_presence(void)
 {
-    UDP_send_msg(C2E_BROADCAST_ID, sizeof(C2E_BROADCAST_ID), IP_ADDR_BROADCAST);
+   UDP_broadcast_presence();
     return g_state;
     //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
 }
@@ -95,17 +91,7 @@ static uint32_t wait(void)
     return g_state;
 }
 
-// display gateway IP address
-void display_gw_address(void)
-{
-    for (int i = 0; i < g_gw_count; i++)
-    {
-        unsigned char *temp = (unsigned char *)&g_gateways[i];
-        // Convert the IP Address into a string for display purposes
-        usprintf(print_buf, "GW %d: %d.%d.%d.%d    ", i, temp[0], temp[1], temp[2], temp[3]);
-        RIT128x96x4StringDraw(print_buf, 10, 30+i*10, 15);    
-    }
-}                  
+              
 
 //display an lwIP address
 void display_ip_address(void)

@@ -9,6 +9,7 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
+static char print_buf[32];
 unsigned char C2E_BROADCAST_ID[5] = {'C', '2', 'E', 'B', 'C'};           // identifier for broadcast messages
 unsigned char C2E_DATA_ID[5] = {'C', '2', 'E', 'D', 'T'};           // identifier for broadcast messages
 struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
@@ -192,3 +193,21 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     //
     //pbuf_free(p);
 }
+
+void UDP_broadcast_presence()
+{
+     UDP_send_msg(C2E_BROADCAST_ID, sizeof(C2E_BROADCAST_ID), IP_ADDR_BROADCAST);
+}
+
+// display gateway IP address
+void display_gw_address(void)
+{
+    for (int i = 0; i < g_gw_count; i++)
+    {
+        unsigned char *temp = (unsigned char *)&g_gateways[i];
+        // Convert the IP Address into a string for display purposes
+        usprintf(print_buf, "GW %d: %d.%d.%d.%d    ", i, temp[0], temp[1], temp[2], temp[3]);
+        RIT128x96x4StringDraw(print_buf, 10, 30+i*10, 15);    
+    }
+}    
+
