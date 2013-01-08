@@ -191,6 +191,11 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     //pbuf_free(p);
 }
 
+void UDP_send_CAN(unsigned char *data, uint32_t size)
+{
+    
+}
+
 void UDP_broadcast_presence()
 {
      UDP_send_msg(C2E_BROADCAST_ID, sizeof(C2E_BROADCAST_ID), IP_ADDR_BROADCAST);
@@ -204,7 +209,7 @@ void display_gw_address(void)
         unsigned char *temp = (unsigned char *)&g_gateways[i];
         // Convert the IP Address into a string for display purposes
         usprintf(print_buf, "GW %d: %d.%d.%d.%d    ", i, temp[0], temp[1], temp[2], temp[3]);
-        RIT128x96x4StringDraw(print_buf, 10, 30+i*10, 15);    
+        RIT128x96x4StringDraw(print_buf, 5, 30+i*10, 15);    
     }
 }    
 

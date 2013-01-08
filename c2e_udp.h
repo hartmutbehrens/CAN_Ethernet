@@ -14,6 +14,7 @@ typedef struct
 
 void add_gateway(struct ip_addr gw_address);
 void display_gw_address(void);							            // display gateway IP addresses
+void UDP_send_CAN(unsigned char *data, uint32_t size);
 void UDP_broadcast_presence();
 void UDP_send_data(tRingBufObject *pt_ring_buf);
 void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_address);

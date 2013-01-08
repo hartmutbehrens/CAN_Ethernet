@@ -10,6 +10,7 @@
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
 #include "c2e_can.h"
+#include "c2e_udp.h"
 #include "c2e_utils.h"
 
 can_struct_t CAN_data;                                                   // structure to hold CAN RX and TX data
@@ -31,7 +32,6 @@ void display_CAN_statistics(void)
         update_count = 0;                                   // reset the update count
     } 
 }
-
 
 // CAN controller interrupt handler.
 void CAN_handler(void)
@@ -55,13 +55,15 @@ void CAN_handler(void)
             lost_message_count += 1;
         }
 
-        int offset = status-9;                                                             // offset into buffer to locate receive data
-        uint32_to_uchar(&frame[0], CAN_data.rx_msg_object.ulMsgID);
-        memcpy(&frame[4], &CAN_data.rx_msg_object.pucMsgData[offset*8], 8 );               // copy CAN data into frame
+        uint32_t offset = status-9;                                                                  // offset into buffer to locate receive data
+        uint32_to_uchar(&frame[0], CAN_data.rx_msg_object.ulMsgID);                                  // convert ID to char so that it is suitable to sending over UDP
+
+        IntMasterDisable();
+        memcpy(&frame[4], &CAN_data.rx_msg_object.pucMsgData[offset*8], 8 );                         // copy CAN data into frame
         frame[EXT_FLAG_POS] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
         frame[RTR_FLAG_POS] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
-
         RingBufWrite(&g_can_ringbuf, &frame[0], CAN_FRAME_SIZE);
+        IntMasterEnable();
 
         CAN_data.rx_msg_object.pucMsgData += 8;                               // Advance the read pointer.
         CAN_data.bytes_remaining -= 8;                                        // Decrement the expected bytes remaining.
@@ -71,7 +73,7 @@ void CAN_handler(void)
             CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;           // re-assign pointer to buffer that will hold message data - seems to be necessary to prevent lock-up (presumably due to memory fillup?)
             CAN_data.bytes_remaining = CAN_FIFO_SIZE;                         // reset number of bytes expected
         }
-        //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                       // Trigger PendSV
+        //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                       // Trigger PendSV in order to send CAN packets
     }
     else
     {
@@ -81,7 +83,7 @@ void CAN_handler(void)
 }
 
 
-uint32_t CAN_init(void)                                                // Enable the board for CAN processing
+uint32_t CAN_init(void)                                                 // Enable the board for CAN processing
 {
     RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));      // initialize ring buffer to receive CAN frames
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);                        // Configure CAN 0 Pins.
@@ -117,9 +119,7 @@ int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, can_struct_t *CAN_da
     for(idx=0; idx < (CAN_FIFO_SIZE / 8); idx++)                        // Transfer bytes in multiples of eight bytes.
     {
 
-        // If there are more than eight remaining to be sent then just queue up
-        // eight bytes and go on to the next message object(s) for the
-        // remaining bytes.
+        // If there are more than eight remaining to be sent then just queue up eight bytes and go on to the next message object(s) for the remaining bytes.
         if(rx_size > 8)
         {
             CAN_data->rx_msg_object.ulMsgLen = 8;                       // The length is always eight as the full buffer is divisible by 8.
@@ -137,4 +137,14 @@ int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, can_struct_t *CAN_da
         }
     }
     return(0);
+}
+
+void PENDSV_handler(void)
+{
+    unsigned char message[CAN_RINGBUF_SIZE];
+    uint32_t size = RingBufUsed(&g_can_ringbuf);
+    RingBufRead(&g_can_ringbuf, &message[0], size);
+    //UDP_send_data(&g_can_ringbuf);                                    // send CAN frames over UDP
+    //UDP_send_msg(message, sizeof(message));
+    HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_UNPEND_SV;                     // clear PendSV
 }

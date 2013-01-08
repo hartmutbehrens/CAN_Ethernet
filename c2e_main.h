@@ -18,6 +18,5 @@ void display_state(void);											// display state machine state
 void display_ip_address(void);										// display an lwIP address
 void netif_status_change(struct netif *netif);
 void SYSTICK_handler(void);
-void PENDSV_handler(void);											// PendSV interrup handler - causes UDP packets with embedded CAN frames to be sent. Triggered in SW when RingBuffer reaches a threshold.
 
 #endif

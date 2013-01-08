@@ -89,7 +89,7 @@ void display_ip_address(void)
 {
     unsigned char *temp = (unsigned char *)&g_netif->ip_addr.addr;
     // Convert the IP Address into a string for display purposes
-    usprintf(print_buf, "IP: %d.%d.%d.%d    ", temp[0], temp[1], temp[2], temp[3]);
+    usprintf(print_buf, "IP: %d.%d.%d.%d   ", temp[0], temp[1], temp[2], temp[3]);
     RIT128x96x4StringDraw(print_buf, 5, 20, 15);
 }
 
@@ -184,19 +184,7 @@ void lwIPHostTimerHandler(void)                                         // This 
     enqueue_event(EV_BROADCAST);   
 }
 
-void PENDSV_handler(void)
-{
-    //unsigned char message[19];
-   // unsigned char message[1];
-    //message[0] = ST_FINDGW;
-    //message[0] = C2E_DATA;
-    //uint32_t size = RingBufUsed(&g_can_ringbuf);
-    //uint32_to_uchar(&message[1],size);
-    //RingBufRead(&g_can_ringbuf, &message[5], size);
-    //UDP_send_data(&g_can_ringbuf);                                           // send CAN frames over UDP
-    //UDP_send_msg(message, sizeof(message));
-    HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_UNPEND_SV;                     // clear PendSV
-}
+
 
 
 

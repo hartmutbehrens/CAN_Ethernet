@@ -20,5 +20,6 @@ void display_CAN_statistics(void);
 void CAN_handler(void);
 uint32_t CAN_init(void);
 int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, can_struct_t *CAN_data);
+void PENDSV_handler(void);                                          // PendSV interrup handler - causes UDP packets with embedded CAN frames to be sent. Triggered in SW when RingBuffer reaches a threshold.
 
 #endif
