@@ -133,9 +133,6 @@ static int message_starts_with(unsigned char *data, unsigned char *start_str)
     return 0;
 }
 
-
-
-
 // This function is called by the lwIP TCP/IP stack when it receives a UDP packet from the discovery port.  
 // It produces the response packet, which is sent back to the querying client.
 void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port)
@@ -143,11 +140,11 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 
     unsigned char *data;
     data = p->payload;
-    if ( message_starts_with(data, C2E_BROADCAST_ID) )
+    if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
-        add_gateway(*addr);                                 // found a gateway, so add it to the list of known gateways
+        add_gateway(*addr);                                 
     }
-    if ( message_starts_with(data, C2E_DATA_ID) )
+    if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
     }
 

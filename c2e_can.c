@@ -16,7 +16,7 @@ can_struct_t CAN_data;                                                   // stru
 volatile uint32_t rx_message_count = 0;                                  // CAN received message count
 volatile uint32_t update_count = 0;                                      // print CAN updates once this threshold is reached
 volatile uint32_t lost_message_count = 0;                                // lost CAN message count
-static char print_buf[16];                                               // buffer for print messages
+static char print_buf[32];                                               // buffer for print messages
 static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
 tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
 
@@ -24,7 +24,9 @@ void display_CAN_statistics(void)
 {    
     if (update_count >= CAN_UPDATERATE)
     {
-        usprintf(print_buf, "RX %u / %u  ", lost_message_count, rx_message_count);
+        usprintf(print_buf, "CAN TX %u/%u   ", 0, 0);
+        RIT128x96x4StringDraw(print_buf, 5, 70, 15);
+        usprintf(print_buf, "CAN RX %u/%u   ", lost_message_count, rx_message_count);
         RIT128x96x4StringDraw(print_buf, 5, 80, 15);
         update_count = 0;                                   // reset the update count
     } 
@@ -69,7 +71,7 @@ void CAN_handler(void)
             CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;           // re-assign pointer to buffer that will hold message data - seems to be necessary to prevent lock-up (presumably due to memory fillup?)
             CAN_data.bytes_remaining = CAN_FIFO_SIZE;                         // reset number of bytes expected
         }
-        //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
+        //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                       // Trigger PendSV
     }
     else
     {

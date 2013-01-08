@@ -61,8 +61,6 @@ int main(void)
                 if ((event == transition[i].event) || (EV_ANY == transition[i].event)) 
                 {
                     g_state = (transition[i].fn)();
-                    //usprintf(print_buf, "STATE: %d        ", g_state);
-                    //RIT128x96x4StringDraw(print_buf, 5, 50, 15);
                     break;
                 }
             }
@@ -73,7 +71,7 @@ int main(void)
 //broadcast presence - return to previous state
 static uint32_t broadcast_presence(void)
 {
-   UDP_broadcast_presence();
+   UDP_broadcast_presence();                                                // send UDP broadcast messages to indicate the presence of a CAN2Ethernet gateway
     return g_state;
     //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
 }
@@ -84,11 +82,9 @@ static uint32_t wait(void)
     display_state();
     display_CAN_statistics();
     return g_state;
-}
+}  
 
-              
-
-//display an lwIP address
+//display a IP address
 void display_ip_address(void)
 {
     unsigned char *temp = (unsigned char *)&g_netif->ip_addr.addr;
@@ -100,8 +96,8 @@ void display_ip_address(void)
 //display state
 void display_state(void)
 {
-    usprintf(print_buf, "STATE: %d ", g_state);
-    RIT128x96x4StringDraw(print_buf, 5, 70, 15);
+    usprintf(print_buf, "%d ", g_state);
+    RIT128x96x4StringDraw(print_buf, 110, 10, 15);
 }
 
 // handle a change in IP address - change state to ST_IPCHANGED
