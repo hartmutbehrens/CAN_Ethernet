@@ -12,12 +12,13 @@
 #include "c2e_can.h"
 #include "c2e_utils.h"
 
-can_struct_t CAN_data;                                                         // structure to hold CAN RX and TX data
-volatile uint32_t rx_message_count = 0;                                    // CAN received message count
-volatile uint32_t update_count = 0;                                     // print CAN updates once this threshold is reached
-volatile uint32_t lost_message_count = 0;                               // lost CAN message count
-static char print_buf[16];
-extern tRingBufObject g_can_ringbuf;                                               // ring buffer to receive CAN frames
+can_struct_t CAN_data;                                                   // structure to hold CAN RX and TX data
+volatile uint32_t rx_message_count = 0;                                  // CAN received message count
+volatile uint32_t update_count = 0;                                      // print CAN updates once this threshold is reached
+volatile uint32_t lost_message_count = 0;                                // lost CAN message count
+static char print_buf[16];                                               // buffer for print messages
+static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
+tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
 
 void display_CAN_statistics(void)
 {    
@@ -80,6 +81,7 @@ void CAN_handler(void)
 
 uint32_t CAN_init(void)                                                // Enable the board for CAN processing
 {
+    RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));      // initialize ring buffer to receive CAN frames
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);                        // Configure CAN 0 Pins.
     GPIOPinTypeCAN(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_1);           // Configure CAN 0 Pins.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_CAN0);                         // Enable the CAN controller.

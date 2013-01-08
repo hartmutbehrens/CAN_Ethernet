@@ -19,11 +19,7 @@
 #include "c2e_utils.h"
 
 static char print_buf[32];
-static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
 static uint32_t g_state;                                                 // current state 
-tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
-
-
 struct netif *g_netif;
 volatile uint32_t previous_ip = 0;
 
@@ -52,7 +48,6 @@ int main(void)
     unsigned char event; 
     uint32_t transitions =  sizeof(transition)/sizeof(*transition); 
     
-    RingBufInit(&g_can_ringbuf, g_can_rxbuf, sizeof(g_can_rxbuf));          // initialize ring buffer to receive CAN frames
     load_boot_events();                                                     // load events required to boot the board
 
     g_state = ST_INIT;
