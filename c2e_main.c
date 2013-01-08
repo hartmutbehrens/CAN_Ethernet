@@ -70,7 +70,7 @@ int main(void)
     }
 }
 
-//broadcast presence
+//broadcast presence - return to previous state
 static uint32_t broadcast_presence(void)
 {
    UDP_broadcast_presence();
@@ -78,7 +78,7 @@ static uint32_t broadcast_presence(void)
     //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
 }
 
-// wait for stuff to happen
+// wait for stuff to happen - return to previous state
 static uint32_t wait(void)
 {
     display_state();
@@ -104,19 +104,19 @@ void display_state(void)
     RIT128x96x4StringDraw(print_buf, 5, 70, 15);
 }
 
-// handle a change in IP address
+// handle a change in IP address - change state to ST_IPCHANGED
 static uint32_t handle_IP_change(void)
 {
     display_ip_address();
-    UDP_start_listen();
+    UDP_start_listen();                     // start receiving UDP messages
     return ST_IPCHANGED;
 }
 
-// handle a addition of a gateway
+// handle a addition of a gateway - change state to ST_GWFOUND
 static uint32_t handle_GW_change(void)
 {
-    display_gw_address();                   //display gateway address
-    enqueue_event(EV_INITCAN);
+    display_gw_address();                   // display gateway address
+    enqueue_event(EV_INITCAN);              // schedule initialization of CAN
     return ST_GWFOUND;
 }
 
@@ -153,6 +153,7 @@ static uint32_t INT_init(void)
     return ST_INTENABLED;
 }
 
+// initialize lwIP library - change state to ST_LWIPINIT
 static uint32_t LWIP_init(void)
 {
     unsigned char mac_address[8];                                       // buffer to hold MAC address
@@ -166,9 +167,10 @@ static uint32_t LWIP_init(void)
 
 void netif_status_change(struct netif *netif)
 {
-    enqueue_event(EV_IPCHANGED);
+    enqueue_event(EV_IPCHANGED);                                        // schedule activation of receiving UDP packets
 }
 
+// state machine error state
 static uint32_t fsm_any(void)
 {
     RIT128x96x4StringDraw("FSM ERROR", 5, 60, 15);
