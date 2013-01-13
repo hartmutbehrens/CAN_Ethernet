@@ -181,7 +181,11 @@ void SYSTICK_handler(void)                                              // SYSTI
 
 void lwIPHostTimerHandler(void)                                         // This function is required by lwIP library to support any host-related timer functions.
 {
-    enqueue_event(EV_BROADCAST);   
+    if (gateway_count() == 0)
+    {
+        enqueue_event(EV_BROADCAST);                                    // broadcast presence, if no gateways have announced themselves yet
+    }
+    
 }
 
 

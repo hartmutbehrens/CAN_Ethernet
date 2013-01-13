@@ -34,6 +34,7 @@ void add_gateway(struct ip_addr gw_address)
     {
         if (g_gateways[i].addr == gw_address.addr)
         {
+            enqueue_event(EV_BROADCAST);                                    // perhaps the gateay has forgotten about us (due to restart), so send out broadcast message again
             return;
         }
     }
@@ -45,6 +46,11 @@ void add_gateway(struct ip_addr gw_address)
         g_gw_count++;
         enqueue_event(EV_FOUNDGW);
     }
+}
+
+uint32_t gateway_count(void)
+{
+    return g_gw_count;
 }
 
 void UDP_send_data(tRingBufObject *pt_ring_buf)
@@ -142,7 +148,7 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     data = p->payload;
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
-        add_gateway(*addr);                                 
+        add_gateway(*addr);
     }
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
@@ -207,8 +213,7 @@ void display_gw_address(void)
     for (int i = 0; i < g_gw_count; i++)
     {
         unsigned char *temp = (unsigned char *)&g_gateways[i];
-        // Convert the IP Address into a string for display purposes
-        usprintf(print_buf, "GW %d: %d.%d.%d.%d    ", i, temp[0], temp[1], temp[2], temp[3]);
+        usprintf(print_buf, "GW %d: %d.%d.%d.%d    ", i, temp[0], temp[1], temp[2], temp[3]);               // Convert the IP Address into a string for display purposes
         RIT128x96x4StringDraw(print_buf, 5, 30+i*10, 15);    
     }
 }    
