@@ -128,6 +128,23 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
     udp_remove(pcb);
 }
 
+static void process_CAN_data(unsigned char *data, uint32_t size)
+{
+    uint32_t position = 0;
+    while (position < size)
+    {
+        uint32_t CAN_id = uchar_to_uint32(&data[0]);
+        position += 4;                                          // advance past CAN message ID
+        position += 8;                                          // advance past CAN data
+        uint32_t ext_id_flag = data[position];                  // CAN extended ID flag
+        position += 1;
+        uint32_t remote_tx_flag = data[position];
+        position += 1;
+        //usprintf(print_buf, "%u %u %u", CAN_id, ext_id_flag, remote_tx_flag);
+        //RIT128x96x4StringDraw(print_buf, 60, 10, 15);    
+    }
+}
+
 static int message_starts_with(unsigned char *data, unsigned char *start_str)
 {
     uint32_t size = sizeof(start_str)/sizeof(*start_str);
@@ -145,12 +162,9 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 
     unsigned char *data;
     data = p->payload;
-    uint32_t packet_length =  p->len; 
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
-        uint32_t CAN_id = uchar_to_uint32(&data[5]);
-        usprintf(print_buf, "%u ", CAN_id);
-        RIT128x96x4StringDraw(print_buf, 80, 10, 15);
+        process_CAN_data(&data[5], (p->len - 5) );
     }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
