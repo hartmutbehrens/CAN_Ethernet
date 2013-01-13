@@ -131,7 +131,7 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
 static int message_starts_with(unsigned char *data, unsigned char *start_str)
 {
     uint32_t size = sizeof(start_str)/sizeof(*start_str);
-    if (ustrncmp((const char *)data, (const char *)start_str, sizeof(size)) == 0)
+    if (ustrncmp((const char *)data, (const char *)start_str, size) == 0)
     {
        return 1;
     }
@@ -145,8 +145,12 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 
     unsigned char *data;
     data = p->payload;
+    uint32_t packet_length =  p->len; 
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
+        uint32_t CAN_id = uchar_to_uint32(&data[5]);
+        usprintf(print_buf, "%u ", CAN_id);
+        RIT128x96x4StringDraw(print_buf, 80, 10, 15);
     }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
@@ -200,11 +204,13 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 void UDP_send_CAN(unsigned char *data, uint32_t size)
 {
     uint32_t preamble_size = sizeof(C2E_DATA_ID);
-    uint32_t total_size = size + preamble_size;
+    uint32_t total_size = size + preamble_size;                                       // +4 for the size of the data packet
     unsigned char message[total_size];
+
     //usprintf(print_buf, "%u %u %u    ", preamble_size, size, total_size);               // Convert the IP Address into a string for display purposes
     //RIT128x96x4StringDraw(print_buf, 5, 60, 15);    
     memcpy(&message[0], &C2E_DATA_ID[0], preamble_size);
+    //uint32_to_uchar(&message[preamble_size], total_size);                                 // convert ID to char so that it is suitable to sending over UDP
     memcpy(&message[preamble_size], &data[0], size);
     UDP_send_msg(&message[0], total_size, IP_ADDR_BROADCAST);
 }
