@@ -124,7 +124,6 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
         RIT128x96x4StringDraw("UDP TX ERR", 5, 60, 15);    
     }
     
-    
     pbuf_free(p);                                               // Free the pbuf.
     udp_remove(pcb);
 }
@@ -146,13 +145,14 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 
     unsigned char *data;
     data = p->payload;
+    if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
+    {
+    }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
         add_gateway(*addr);
     }
-    if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
-    {
-    }
+    
 
 
 /*
@@ -199,7 +199,14 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 
 void UDP_send_CAN(unsigned char *data, uint32_t size)
 {
-    
+    uint32_t preamble_size = sizeof(C2E_DATA_ID);
+    uint32_t total_size = size + preamble_size;
+    unsigned char message[total_size];
+    //usprintf(print_buf, "%u %u %u    ", preamble_size, size, total_size);               // Convert the IP Address into a string for display purposes
+    //RIT128x96x4StringDraw(print_buf, 5, 60, 15);    
+    memcpy(&message[0], &C2E_DATA_ID[0], preamble_size);
+    memcpy(&message[preamble_size], &data[0], size);
+    UDP_send_msg(&message[0], total_size, IP_ADDR_BROADCAST);
 }
 
 void UDP_broadcast_presence()

@@ -74,7 +74,7 @@ void CAN_handler(void)
             CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;           // re-assign pointer to buffer that will hold message data - seems to be necessary to prevent lock-up (presumably due to memory fillup?)
             CAN_data.bytes_remaining = CAN_FIFO_SIZE;                         // reset number of bytes expected
         }
-        //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                       // Trigger PendSV in order to send CAN packets
+        HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                       // Trigger PendSV in order to send CAN packets
     }
     else
     {
@@ -142,10 +142,10 @@ int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, can_struct_t *CAN_da
 
 void PENDSV_handler(void)
 {
-    unsigned char message[CAN_RINGBUF_SIZE];
     uint32_t size = RingBufUsed(&g_can_ringbuf);
+    unsigned char message[size];                                        // allocate storage for message
     RingBufRead(&g_can_ringbuf, &message[0], size);
-    //UDP_send_data(&g_can_ringbuf);                                    // send CAN frames over UDP
-    //UDP_send_msg(message, sizeof(message));
+    UDP_send_CAN(&message[0], size);
+    //UDP_send_msg(message, size);                                      // send CAN frames over UDP
     HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_UNPEND_SV;                     // clear PendSV
 }
