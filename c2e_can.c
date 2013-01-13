@@ -9,6 +9,7 @@
 #include "utils/ringbuf.h"
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
+#include "config.h"
 #include "c2e_can.h"
 #include "c2e_udp.h"
 #include "c2e_utils.h"
@@ -17,7 +18,7 @@ can_struct_t CAN_data;                                                   // stru
 volatile uint32_t rx_message_count = 0;                                  // CAN received message count
 volatile uint32_t update_count = 0;                                      // print CAN updates once this threshold is reached
 volatile uint32_t lost_message_count = 0;                                // lost CAN message count
-static char print_buf[32];                                               // buffer for print messages
+static char print_buf[PRINT_BUF_SIZE];                                   // buffer for print messages
 static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
 tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
 

@@ -18,7 +18,7 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
-static char print_buf[32];
+static char print_buf[PRINT_BUF_SIZE];
 static uint32_t g_state;                                                 // current state 
 struct netif *g_netif;
 volatile uint32_t previous_ip = 0;

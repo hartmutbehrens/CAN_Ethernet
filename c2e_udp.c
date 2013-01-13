@@ -9,7 +9,7 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
-static char print_buf[32];
+static char print_buf[PRINT_BUF_SIZE];
 unsigned char C2E_BROADCAST_ID[5] = {'C', '2', 'E', 'B', 'C'};           // identifier for broadcast messages
 unsigned char C2E_DATA_ID[5] = {'C', '2', 'E', 'D', 'T'};           // identifier for broadcast messages
 struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
