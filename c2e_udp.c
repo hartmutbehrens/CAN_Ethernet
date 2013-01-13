@@ -162,9 +162,10 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 
     unsigned char *data;
     data = p->payload;
+    uint32_t d_id_size = sizeof(C2E_DATA_ID);
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
-        process_CAN_data(&data[5], (p->len - 5) );
+        process_CAN_data(&data[d_id_size], (p->len - d_id_size) );
     }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
