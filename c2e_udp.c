@@ -140,8 +140,8 @@ static void process_CAN_data(unsigned char *data, uint32_t size)
         position += 1;
         uint32_t remote_tx_flag = data[position];
         position += 1;
-        //usprintf(print_buf, "%u %u %u", CAN_id, ext_id_flag, remote_tx_flag);
-        //RIT128x96x4StringDraw(print_buf, 60, 10, 15);    
+        usprintf(print_buf, "%u %u %u", CAN_id, ext_id_flag, remote_tx_flag);
+        RIT128x96x4StringDraw(print_buf, 60, 10, 15);    
     }
 }
 
