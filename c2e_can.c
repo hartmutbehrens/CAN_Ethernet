@@ -49,7 +49,7 @@ static void write_to_ringbuf(tCANMsgObject *can_object, uint32_t id)            
 void CAN_handler(void)
 {
     //uint32_t status;
-    uint32_t status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority
+    uint32_t status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);             // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority
     
     if(status <= 8)                                                           // The first eight message objects make up the Transmit message FIFO.
     {
@@ -66,7 +66,7 @@ void CAN_handler(void)
             lost_message_count += 1;
         }
 
-        write_to_ringbuf(&CAN_data.rx_msg_object, (status - 9) );
+        write_to_ringbuf(&CAN_data.rx_msg_object, (status - 9) );             // write the CAN data to a ringbuffer for further processing
         
         CAN_data.rx_msg_object.pucMsgData += 8;                               // Advance the read pointer.
         CAN_data.bytes_remaining -= 8;                                        // Decrement the expected bytes remaining.
@@ -76,7 +76,7 @@ void CAN_handler(void)
             CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;           // re-assign pointer to buffer that will hold message data - seems to be necessary to prevent lock-up (presumably due to memory fillup?)
             CAN_data.bytes_remaining = CAN_FIFO_SIZE;                         // reset number of bytes expected
         }
-        HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                       // Trigger PendSV in order to send CAN packets
+        HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV in order to send CAN packets
     }
     else
     {
