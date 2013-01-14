@@ -48,9 +48,8 @@ static void write_to_ringbuf(tCANMsgObject *can_object, uint32_t id)            
 // CAN controller interrupt handler.
 void CAN_handler(void)
 {
-    uint32_t status;
-    //unsigned char frame[CAN_FRAME_SIZE];                                      // CAN frame to send
-    status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority
+    //uint32_t status;
+    uint32_t status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);                      // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority
     
     if(status <= 8)                                                           // The first eight message objects make up the Transmit message FIFO.
     {
@@ -68,18 +67,7 @@ void CAN_handler(void)
         }
 
         write_to_ringbuf(&CAN_data.rx_msg_object, (status - 9) );
-        /*
-        uint32_t offset = status-9;                                                                  // offset into buffer to locate receive data
-        uint32_to_uchar(&frame[0], CAN_data.rx_msg_object.ulMsgID);                                  // convert ID to char so that it is suitable to sending over UDP
-
-        //IntMasterDisable();
-        memcpy(&frame[4], &CAN_data.rx_msg_object.pucMsgData[offset*8], 8 );                         // copy CAN data into frame
-        frame[EXT_FLAG_POS] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
-        frame[RTR_FLAG_POS] = (CAN_data.rx_msg_object.ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
-        RingBufWrite(&g_can_ringbuf, &frame[0], CAN_FRAME_SIZE);
-        //IntMasterEnable();
-        */
-
+        
         CAN_data.rx_msg_object.pucMsgData += 8;                               // Advance the read pointer.
         CAN_data.bytes_remaining -= 8;                                        // Decrement the expected bytes remaining.
         
