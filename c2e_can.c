@@ -15,8 +15,8 @@
 #include "c2e_utils.h"
 
 can_struct_t CAN_data;                                                   // structure to hold CAN RX and TX data
-volatile uint32_t rx_message_count = 0;                                  // CAN received message count
-volatile uint32_t update_count = 0;                                      // print CAN updates once this threshold is reached
+static volatile uint32_t rx_message_count = 0;                                  // CAN received message count
+static volatile uint32_t update_count = 0;                                      // print CAN updates once this threshold is reached
 volatile uint32_t lost_message_count = 0;                                // lost CAN message count
 static char print_buf[PRINT_BUF_SIZE];                                   // buffer for print messages
 static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer

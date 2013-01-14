@@ -15,7 +15,8 @@ typedef struct
 #define UDP_PORT_RX 11898
 #define UDP_PORT_TX 11899
 #define CAN_FRAME_SIZE 14                   // size of CAN frame to be sent via UDP
-#define CAN_UPDATERATE 1 					// rate at which to display received CAN message updates
+#define CAN_UPDATERATE 1 					// rate at which to display  CAN message statistics
+#define UDP_UPDATERATE 1 					// rate at which to display  UDP message statistics
 #define CAN_RINGBUF_SIZE (CAN_FRAME_SIZE*80)  // size of ring buffer, accomodate up to 160 frames, probably a bit excessive
 #define PRINT_BUF_SIZE 20					// OLED print buffer size
 #define EV_RINGBUF_SIZE 64  				// size of event ring buffer, accomodate up to 64 events

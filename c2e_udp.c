@@ -13,7 +13,10 @@ static char print_buf[PRINT_BUF_SIZE];
 unsigned char C2E_BROADCAST_ID[5] = {'C', '2', 'E', 'B', 'C'};           // identifier for broadcast messages
 unsigned char C2E_DATA_ID[5] = {'C', '2', 'E', 'D', 'T'};           // identifier for broadcast messages
 struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
-volatile uint32_t g_gw_count = 0;                                          // count of CAN gateways
+static volatile uint32_t g_gw_count = 0;                                          // count of CAN gateways
+static volatile uint32_t udp_tx_count = 0;
+static volatile uint32_t udp_rx_count = 0;
+static volatile uint32_t update_count = 0;                                      // print CAN updates once this threshold is reached
 
 void UDP_start_listen(void)
 {
@@ -140,8 +143,10 @@ static void process_CAN_data(unsigned char *data, uint32_t size)
         position += 1;
         uint32_t remote_tx_flag = data[position];
         position += 1;
-        usprintf(print_buf, "%u %u %u", CAN_id, ext_id_flag, remote_tx_flag);
-        RIT128x96x4StringDraw(print_buf, 60, 10, 15);    
+        udp_rx_count += 1;
+        update_count += 1;
+        //usprintf(print_buf, "%u", udp_rx_count);
+        //RIT128x96x4StringDraw(print_buf, 60, 10, 15);    
     }
 }
 
@@ -162,10 +167,10 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 
     unsigned char *data;
     data = p->payload;
-    uint32_t d_id_size = sizeof(C2E_DATA_ID);
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
-        process_CAN_data(&data[d_id_size], (p->len - d_id_size) );
+        uint32_t id_size = sizeof(C2E_DATA_ID);
+        process_CAN_data(&data[id_size], (p->len - id_size) );
     }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
@@ -221,7 +226,8 @@ void UDP_send_CAN(unsigned char *data, uint32_t size)
     uint32_t preamble_size = sizeof(C2E_DATA_ID);
     uint32_t total_size = size + preamble_size;                                       // +4 for the size of the data packet
     unsigned char message[total_size];
-
+    udp_tx_count += (size / CAN_FRAME_SIZE);
+    update_count += udp_tx_count;
     //usprintf(print_buf, "%u %u %u    ", preamble_size, size, total_size);               // Convert the IP Address into a string for display purposes
     //RIT128x96x4StringDraw(print_buf, 5, 60, 15);    
     memcpy(&message[0], &C2E_DATA_ID[0], preamble_size);
@@ -233,6 +239,18 @@ void UDP_send_CAN(unsigned char *data, uint32_t size)
 void UDP_broadcast_presence()
 {
      UDP_send_msg(C2E_BROADCAST_ID, sizeof(C2E_BROADCAST_ID), IP_ADDR_BROADCAST);
+}
+
+void display_UDP_statistics(void)
+{    
+    if (update_count >= UDP_UPDATERATE)
+    {
+        usprintf(print_buf, "UDP TX %u   ", udp_tx_count);
+        RIT128x96x4StringDraw(print_buf, 5, 50, 15);
+        usprintf(print_buf, "UDP RX %u   ", udp_rx_count);
+        RIT128x96x4StringDraw(print_buf, 5, 60, 15);
+        update_count = 0;                                   // reset the update count
+    } 
 }
 
 // display gateway IP address
