@@ -14,7 +14,7 @@
 #include "c2e_udp.h"
 #include "c2e_utils.h"
 
-can_struct_t CAN_data;                                                   // structure to hold CAN RX and TX data
+static can_struct_t CAN_data;                                                   // structure to hold CAN RX and TX data
 static volatile uint32_t rx_message_count = 0;                                  // CAN received message count
 static volatile uint32_t update_count = 0;                                      // print CAN updates once this threshold is reached
 volatile uint32_t lost_message_count = 0;                                // lost CAN message count
@@ -97,12 +97,18 @@ uint32_t CAN_init(void)                                                 // Enabl
     CANIntEnable(CAN0_BASE, CAN_INT_MASTER | CAN_INT_ERROR);            // Enable interrupts from CAN controller.
     IntEnable(INT_CAN0);                                                // Enable interrupts for the CAN in the NVIC.
     CANEnable(CAN0_BASE);                                               // Take the CAN0 device out of INIT state.
-    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE, &CAN_data);     // Configure the receive message FIFO - this function should only be called once.    
+    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE);     // Configure the receive message FIFO - this function should only be called once.    
     return ST_CANINIT;
 }
 
+// This function configures the transmit FIFO and copies data into the FIFO.
+int CAN_transmit_FIFO(unsigned char *data, uint32_t tx_size)
+{
+    return(0);
+}
+
 // This function configures the receive FIFO and should only be called once.
-int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, can_struct_t *CAN_data)
+int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size)
 {
 	int idx;
     if(rx_size > CAN_FIFO_SIZE)
@@ -110,37 +116,39 @@ int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size, can_struct_t *CAN_da
         return(CAN_FIFO_SIZE);
     }
     
-    CAN_data->bytes_remaining = CAN_FIFO_SIZE;                          // Set the total number of bytes expected.
-    CAN_data->rx_msg_object.ulMsgID = 0;                                // Configure the receive message FIFO to accept any messages
-    CAN_data->rx_msg_object.ulMsgIDMask = 0;		                    // don't filter out any ID's
+    CAN_data.bytes_remaining = CAN_FIFO_SIZE;                          // Set the total number of bytes expected.
+    CAN_data.rx_msg_object.ulMsgID = 0;                                // Configure the receive message FIFO to accept any messages
+    CAN_data.rx_msg_object.ulMsgIDMask = 0;		                    // don't filter out any ID's
 
     // Enable interrupts for receveid messages - NB: remember to include ID_FILTER flag
     // TODO: check if CAN_FIFO example from TI has this problem - also check CAN_DEVICE_FIFO
-    CAN_data->rx_msg_object.ulFlags = MSG_OBJ_RX_INT_ENABLE | MSG_OBJ_EXTENDED_ID | MSG_OBJ_USE_ID_FILTER | MSG_OBJ_USE_EXT_FILTER;
-    CAN_data->rx_msg_object.pucMsgData = data;                          // allocate the memory from the beginning of the FIFO location
+    CAN_data.rx_msg_object.ulFlags = MSG_OBJ_RX_INT_ENABLE | MSG_OBJ_EXTENDED_ID | MSG_OBJ_USE_ID_FILTER | MSG_OBJ_USE_EXT_FILTER;
+    CAN_data.rx_msg_object.pucMsgData = data;                          // allocate the memory from the beginning of the FIFO location
     
     for(idx=0; idx < (CAN_FIFO_SIZE / 8); idx++)                        // Transfer bytes in multiples of eight bytes.
     {
 
-        // If there are more than eight remaining to be sent then just queue up eight bytes and go on to the next message object(s) for the remaining bytes.
+        // If there are more than eight remaining to be received then just queue up eight bytes and go on to the next message object(s) for the remaining bytes.
         if(rx_size > 8)
         {
-            CAN_data->rx_msg_object.ulMsgLen = 8;                       // The length is always eight as the full buffer is divisible by 8.
+            CAN_data.rx_msg_object.ulMsgLen = 8;                       // The length is always eight as the full buffer is divisible by 8.
             rx_size -=8;                                                // There are now eight less bytes to receive.
-            CAN_data->rx_msg_object.ulFlags |= MSG_OBJ_FIFO;            // Set the MSG_OBJ_FIFO to indicate that this is not the last data in a chain of FIFO entries.
+            CAN_data.rx_msg_object.ulFlags |= MSG_OBJ_FIFO;            // Set the MSG_OBJ_FIFO to indicate that this is not the last data in a chain of FIFO entries.
             
-            CANMessageSet(CAN0_BASE, idx + 9, &CAN_data->rx_msg_object, MSG_OBJ_TYPE_RX);   // Make sure that all message objects up to the last indicate that they are part of a FIFO.
+            CANMessageSet(CAN0_BASE, idx + 9, &CAN_data.rx_msg_object, MSG_OBJ_TYPE_RX);   // Make sure that all message objects up to the last indicate that they are part of a FIFO.
         }
         else 
         {
-            CAN_data->rx_msg_object.ulMsgLen = rx_size;                 // Get the remaining bytes.
-            CAN_data->rx_msg_object.ulFlags &= ~MSG_OBJ_FIFO;           // Clear the MSG_OBJ_FIFO to indicate that this is the last data in a chain of FIFO entries.
+            CAN_data.rx_msg_object.ulMsgLen = rx_size;                 // Get the remaining bytes.
+            CAN_data.rx_msg_object.ulFlags &= ~MSG_OBJ_FIFO;           // Clear the MSG_OBJ_FIFO to indicate that this is the last data in a chain of FIFO entries.
             
-            CANMessageSet(CAN0_BASE, idx + 9, &CAN_data->rx_msg_object, MSG_OBJ_TYPE_RX);   // This is the last message object in a FIFO so don't set the FIFO to indicate that the FIFO ends with this message object.
+            CANMessageSet(CAN0_BASE, idx + 9, &CAN_data.rx_msg_object, MSG_OBJ_TYPE_RX);   // This is the last message object in a FIFO so don't set the FIFO to indicate that the FIFO ends with this message object.
         }
     }
     return(0);
 }
+
+
 
 void PENDSV_handler(void)
 {
