@@ -107,25 +107,22 @@ int CAN_transmit_FIFO(unsigned char *data, uint32_t tx_size)
     int idx;
     
     // message object used to send CAN data - it will not be "set" right now as that would trigger a transmission.
-    CAN_data.tx_msg_object.ulMsgID = 99;                       // TODO: set CAN id from received UDP data
+    CAN_data.tx_msg_object.ulMsgID = 99;                                                    // TODO: set CAN id from received UDP data
     CAN_data.tx_msg_object.ulMsgIDMask = 0;
     
-    CAN_data.tx_msg_object.ulFlags = MSG_OBJ_TX_INT_ENABLE;                     // enable interrupts for transmitted messages.
+    CAN_data.tx_msg_object.ulFlags = MSG_OBJ_TX_INT_ENABLE;                                 // enable interrupts for transmitted messages.
     if (tx_size > CAN_FIFO_SIZE)
     {
-        return(CAN_FIFO_SIZE);                                                  // Return the maximum possible number of bytes that can be sent in a single FIFO
+        return(CAN_FIFO_SIZE);                                                              // Return the maximum possible number of bytes that can be sent in a single FIFO
     }
     for(idx = 0; idx < 8; idx++)
     {
-        
         if(tx_size > 8)                                                                     // If there are more than eight bytes remaining then use a full message to transfer these 8 bytes
         {
-            
             CAN_data.tx_msg_object.ulMsgLen = 8;                                             // Set the length of the message, which can only be eight bytes as it is all that can be sent with a single message object
             CAN_data.tx_msg_object.pucMsgData = &data[idx * 8];
             CAN_data.tx_msg_object.ulFlags |= MSG_OBJ_FIFO;                                 // Set the MSG_OBJ_FIFO to indicate that this is not the last data in a chain of FIFO entries.
             tx_size -= 8;                                                                   // eight less bytes to transmit.
-            
             CANMessageSet(CAN0_BASE, idx + 1, &CAN_data.tx_msg_object, MSG_OBJ_TYPE_TX);    // Write out this message object.
         }
         // If there are less than or exactly eight bytes remaining then use a message object to transfer these 8 bytes and do not set the
@@ -134,7 +131,6 @@ int CAN_transmit_FIFO(unsigned char *data, uint32_t tx_size)
         {
             CAN_data.tx_msg_object.ulMsgLen = tx_size;                                      // Set the length to the remaining bytes and transmit the data.
             CAN_data.tx_msg_object.pucMsgData = &data[idx * 8];
-
             CANMessageSet(CAN0_BASE, idx + 1, &CAN_data.tx_msg_object, MSG_OBJ_TYPE_TX);   // Write out this message object.
         }
     }
@@ -168,14 +164,12 @@ int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size)
             CAN_data.rx_msg_object.ulMsgLen = 8;                       // The length is always eight as the full buffer is divisible by 8.
             rx_size -=8;                                                // There are now eight less bytes to receive.
             CAN_data.rx_msg_object.ulFlags |= MSG_OBJ_FIFO;            // Set the MSG_OBJ_FIFO to indicate that this is not the last data in a chain of FIFO entries.
-            
             CANMessageSet(CAN0_BASE, idx + 9, &CAN_data.rx_msg_object, MSG_OBJ_TYPE_RX);   // Make sure that all message objects up to the last indicate that they are part of a FIFO.
         }
         else 
         {
             CAN_data.rx_msg_object.ulMsgLen = rx_size;                 // Get the remaining bytes.
             CAN_data.rx_msg_object.ulFlags &= ~MSG_OBJ_FIFO;           // Clear the MSG_OBJ_FIFO to indicate that this is the last data in a chain of FIFO entries.
-            
             CANMessageSet(CAN0_BASE, idx + 9, &CAN_data.rx_msg_object, MSG_OBJ_TYPE_RX);   // This is the last message object in a FIFO so don't set the FIFO to indicate that the FIFO ends with this message object.
         }
     }
