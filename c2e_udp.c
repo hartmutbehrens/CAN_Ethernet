@@ -224,20 +224,16 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
 void UDP_send_CAN(unsigned char *data, uint32_t size)
 {
     uint32_t preamble_size = sizeof(C2E_DATA_ID);
-    uint32_t total_size = size + preamble_size;                                       // +4 for the size of the data packet
+    uint32_t total_size = size + preamble_size;
     unsigned char message[total_size];
     udp_tx_count += (size / CAN_FRAME_SIZE);
     update_count += udp_tx_count;
-    //usprintf(print_buf, "%u %u %u    ", preamble_size, size, total_size);               // Convert the IP Address into a string for display purposes
-    //RIT128x96x4StringDraw(print_buf, 5, 60, 15);    
     memcpy(&message[0], &C2E_DATA_ID[0], preamble_size);
-    //uint32_to_uchar(&message[preamble_size], total_size);                                 // convert ID to char so that it is suitable to sending over UDP
     memcpy(&message[preamble_size], &data[0], size);
     for (int i = 0; i < g_gw_count; i++)                                          
     {
         UDP_send_msg(&message[0], total_size, &g_gateways[g_gw_count]);                  // send to gateway
     }
-    
 }
 
 void UDP_broadcast_presence()
