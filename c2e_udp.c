@@ -132,7 +132,7 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
     udp_remove(pcb);
 }
 
-static void process_received_data(unsigned char *data, uint32_t size)
+static void transfer_to_CAN(unsigned char *data, uint32_t size)
 {
     uint32_t position = 0;
     while (position < size)                                         // more than one CAN frame might be embedded
@@ -166,7 +166,7 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
         uint32_t id_size = sizeof(C2E_DATA_ID);
-        process_received_data(&data[id_size], (p->len - id_size) );
+        transfer_to_CAN(&data[id_size], (p->len - id_size) );
     }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
