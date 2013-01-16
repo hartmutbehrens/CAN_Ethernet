@@ -13,7 +13,7 @@
 static char print_buf[PRINT_BUF_SIZE];
 unsigned char C2E_BROADCAST_ID[5] = {'C', '2', 'E', 'B', 'C'};           // identifier for broadcast messages
 unsigned char C2E_DATA_ID[5] = {'C', '2', 'E', 'D', 'T'};           // identifier for broadcast messages
-struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
+static struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
 static volatile uint32_t g_gw_count = 0;                                          // count of CAN gateways
 static volatile uint32_t udp_tx_count = 0;
 static volatile uint32_t udp_rx_count = 0;
@@ -101,6 +101,19 @@ static int message_starts_with(unsigned char *data, unsigned char *start_str)
     return 0;
 }
 
+void process_CAN_data(unsigned char *data, uint32_t total_size)
+{
+    uint32_t position = sizeof(C2E_DATA_ID);
+    while (position < total_size)
+    {
+        CAN_extract(&data[position]);
+        CAN_transmit();
+        position += CAN_FRAME_SIZE;
+    }
+    udp_rx_count += 1;
+    update_count += 1;
+}
+
 // This function is called by the lwIP TCP/IP stack when it receives a UDP packet from the discovery port.  
 // It produces the response packet, which is sent back to the querying client.
 void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port)
@@ -109,15 +122,7 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     data = p->payload;
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
-        uint32_t position = sizeof(C2E_DATA_ID);
-        while (position < p->len)
-        {
-            CAN_extract(&data[position]);
-            CAN_transmit();
-            position += CAN_FRAME_SIZE;
-        }
-        udp_rx_count += 1;
-        update_count += 1;
+        process_CAN_data(&data[0], p->len);
     }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
