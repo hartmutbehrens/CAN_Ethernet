@@ -19,9 +19,9 @@ typedef struct
 void display_CAN_statistics(void);
 void CAN_handler(void);
 uint32_t CAN_init(void);
-void CAN_transmit(unsigned char *data, const uint32_t tx_size, const uint32_t can_id, const uint32_t ext_flag, const uint32_t remote_tx_flag);
+void CAN_transmit();
 int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size);
-uint32_t extract_transmit_CAN(unsigned char *data, uint32_t size);
+void CAN_extract(unsigned char *data);                              // extract CAN data from message received via UDP
 void PENDSV_handler(void);                                          // PendSV interrup handler - causes UDP packets with embedded CAN frames to be sent. Triggered in SW when RingBuffer reaches a threshold.
 
 #endif

@@ -109,10 +109,15 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     data = p->payload;
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
-        uint32_t id_size = sizeof(C2E_DATA_ID);
-        uint32_t sent = extract_transmit_CAN(&data[id_size], (p->len - id_size) );
-        udp_rx_count += sent;
-        update_count += sent;
+        uint32_t position = sizeof(C2E_DATA_ID);
+        while (position < p->len)
+        {
+            CAN_extract(&data[position]);
+            CAN_transmit();
+            position += CAN_FRAME_SIZE;
+        }
+        udp_rx_count += 1;
+        update_count += 1;
     }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {

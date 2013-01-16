@@ -101,21 +101,8 @@ uint32_t CAN_init(void)                                                 // Enabl
 }
 
 // This function transmits 8 bytes at a time
-void CAN_transmit(unsigned char *data, const uint32_t tx_size, const uint32_t can_id, const uint32_t ext_flag, const uint32_t remote_tx_flag)
+void CAN_transmit()
 {
-    CAN_data.tx_msg_object.ulMsgID = can_id;                                                // set CAN id
-    CAN_data.tx_msg_object.ulMsgIDMask = 0;                                                 // don't mask any messages
-    CAN_data.tx_msg_object.ulFlags = MSG_OBJ_TX_INT_ENABLE;                                 // enable interrupts for transmitted messages.
-    if (ext_flag)
-    {
-        CAN_data.tx_msg_object.ulFlags |= MSG_OBJ_EXTENDED_ID;
-    }
-    if (remote_tx_flag)
-    {
-        CAN_data.tx_msg_object.ulFlags |= MSG_OBJ_REMOTE_FRAME;   
-    }
-    CAN_data.tx_msg_object.ulMsgLen = tx_size; 
-    CAN_data.tx_msg_object.pucMsgData = &data[0];
     CANMessageSet(CAN0_BASE, 1, &CAN_data.tx_msg_object, MSG_OBJ_TYPE_TX);                  // Write out this message object using CAN object 1
     tx_message_count += 1;
     update_count += 1;
@@ -160,23 +147,22 @@ int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size)
     return(0);
 }
 
-uint32_t extract_transmit_CAN(unsigned char *data, uint32_t size)
+void CAN_extract(unsigned char *data)
 {
-    uint32_t position = 0;
-    uint32_t count = 0;
-    while (position < size)                                         // more than one CAN frame might be embedded
+    CAN_data.tx_msg_object.ulMsgID = uchar_to_uint32(&data[CAN_ID_POS]);                                                // set CAN id
+    CAN_data.tx_msg_object.ulMsgIDMask = 0;                                                 // don't mask any messages
+    CAN_data.tx_msg_object.ulFlags = MSG_OBJ_TX_INT_ENABLE;                                 // enable interrupts for transmitted messages.
+    if (data[EXT_FLAG_POS])
     {
-        uint32_t CAN_id = uchar_to_uint32(&data[CAN_ID_POS]);
-        uint32_t ext_id_flag = data[EXT_FLAG_POS];                  // CAN extended ID flag
-        uint32_t remote_tx_flag = data[RTR_FLAG_POS];
-        position += CAN_FRAME_SIZE;
-        CAN_transmit(&data[CAN_DATA_POS], 8, CAN_id, ext_id_flag, remote_tx_flag);
-        count += 1;
+        CAN_data.tx_msg_object.ulFlags |= MSG_OBJ_EXTENDED_ID;
     }
-    return count;
+    if (data[RTR_FLAG_POS])
+    {
+        CAN_data.tx_msg_object.ulFlags |= MSG_OBJ_REMOTE_FRAME;   
+    }
+    CAN_data.tx_msg_object.ulMsgLen = 8; 
+    CAN_data.tx_msg_object.pucMsgData = &data[CAN_DATA_POS];
 }
-
-
 
 void PENDSV_handler(void)
 {
