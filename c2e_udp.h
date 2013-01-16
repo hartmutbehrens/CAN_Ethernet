@@ -18,7 +18,6 @@ void display_UDP_statistics(void);									// display UDP TX/RX message statisti
 void display_gw_address(void);							            // display gateway IP addresses
 void UDP_send_CAN(unsigned char *data, uint32_t size);
 void UDP_broadcast_presence();
-void UDP_send_data(tRingBufObject *pt_ring_buf);
 void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_address);
 void UDP_start_listen(void);
 void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port);
