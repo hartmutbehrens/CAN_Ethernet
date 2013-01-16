@@ -40,7 +40,7 @@ static void write_to_ringbuf(tCANMsgObject *can_object, uint32_t id)            
     unsigned char frame[CAN_FRAME_SIZE];
     uint32_to_uchar(&frame[0], can_object->ulMsgID);                                  // convert ID to char so that it is suitable to sending over UDP
 
-    memcpy(&frame[4], &(can_object->pucMsgData[id*8]), 8 );                         // copy CAN data into frame
+    memcpy(&frame[CAN_DATA_POS], &(can_object->pucMsgData[id*8]), 8 );                         // copy CAN data into frame
     frame[EXT_FLAG_POS] = (can_object->ulFlags & MSG_OBJ_EXTENDED_ID) ? 1 : 0;        // flag to indicate whether CAN message is using extended ID's
     frame[RTR_FLAG_POS] = (can_object->ulFlags & MSG_OBJ_REMOTE_FRAME) ? 1 : 0;       // flag to indicate whether CAN frame transmission was requested by remote node
     RingBufWrite(&g_can_ringbuf, &frame[0], CAN_FRAME_SIZE);

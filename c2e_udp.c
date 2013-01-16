@@ -132,18 +132,16 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
     udp_remove(pcb);
 }
 
-static void process_CAN_data(unsigned char *data, uint32_t size)
+static void process_received_data(unsigned char *data, uint32_t size)
 {
     uint32_t position = 0;
     while (position < size)                                         // more than one CAN frame might be embedded
     {
-        unsigned char CAN_data[8];
         uint32_t CAN_id = uchar_to_uint32(&data[CAN_ID_POS]);
-        memcpy(&CAN_data,&data[0],8);
         uint32_t ext_id_flag = data[EXT_FLAG_POS];                  // CAN extended ID flag
         uint32_t remote_tx_flag = data[RTR_FLAG_POS];
         position += CAN_FRAME_SIZE;
-        CAN_transmit(&CAN_data[0], 8, CAN_id, ext_id_flag, remote_tx_flag);
+        CAN_transmit(&data[CAN_DATA_POS], 8, CAN_id, ext_id_flag, remote_tx_flag);
         udp_rx_count += 1;
         update_count += 1;
     }
@@ -168,7 +166,7 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
         uint32_t id_size = sizeof(C2E_DATA_ID);
-        process_CAN_data(&data[id_size], (p->len - id_size) );
+        process_received_data(&data[id_size], (p->len - id_size) );
     }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
