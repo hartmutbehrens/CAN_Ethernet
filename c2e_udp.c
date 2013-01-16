@@ -110,8 +110,6 @@ void process_CAN_data(unsigned char *data, uint32_t total_size)
         CAN_transmit();
         position += CAN_FRAME_SIZE;
     }
-    udp_rx_count += 1;
-    update_count += 1;
 }
 
 // This function is called by the lwIP TCP/IP stack when it receives a UDP packet from the discovery port.  
@@ -123,6 +121,8 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
         process_CAN_data(&data[0], p->len);
+        udp_rx_count += 1;
+        update_count += 1;
     }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
@@ -153,7 +153,7 @@ void UDP_broadcast_presence()
 
 void display_UDP_statistics(void)
 {    
-    if (update_count >= UDP_UPDATERATE)
+    if ( update_count >= UDP_UPDATERATE )
     {
         usprintf(print_buf, "UDP TX %u   ", udp_tx_count);
         RIT128x96x4StringDraw(print_buf, 5, 50, 15);
