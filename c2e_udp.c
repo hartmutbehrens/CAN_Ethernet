@@ -233,7 +233,11 @@ void UDP_send_CAN(unsigned char *data, uint32_t size)
     memcpy(&message[0], &C2E_DATA_ID[0], preamble_size);
     //uint32_to_uchar(&message[preamble_size], total_size);                                 // convert ID to char so that it is suitable to sending over UDP
     memcpy(&message[preamble_size], &data[0], size);
-    UDP_send_msg(&message[0], total_size, IP_ADDR_BROADCAST);
+    for (int i = 0; i < g_gw_count; i++)                                          
+    {
+        UDP_send_msg(&message[0], total_size, &g_gateways[g_gw_count]);                  // send to gateway
+    }
+    
 }
 
 void UDP_broadcast_presence()
