@@ -18,10 +18,10 @@ static can_struct_t CAN_data;                                                   
 static volatile uint32_t rx_message_count = 0;                                  // CAN RX message count
 static volatile uint32_t tx_message_count = 0;                                  // CAN TX message count
 static volatile uint32_t update_count = 0;                                      // print CAN updates once this threshold is reached
-volatile uint32_t lost_message_count = 0;                                // lost CAN message count
+static volatile uint32_t lost_message_count = 0;                                // lost CAN message count
 static char print_buf[PRINT_BUF_SIZE];                                   // buffer for print messages
 static unsigned char g_can_rxbuf[CAN_RINGBUF_SIZE];                      // memory for CAN ring buffer
-tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
+static tRingBufObject g_can_ringbuf;                                            // ring buffer to receive CAN frames
 
 void display_CAN_statistics(void)
 {    
