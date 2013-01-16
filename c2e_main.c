@@ -86,7 +86,7 @@ static uint32_t wait(void)
 }  
 
 //display a IP address
-void display_ip_address(void)
+static void display_ip_address(void)
 {
     unsigned char *temp = (unsigned char *)&g_netif->ip_addr.addr;
     // Convert the IP Address into a string for display purposes
@@ -95,7 +95,7 @@ void display_ip_address(void)
 }
 
 //display state
-void display_state(void)
+static void display_state(void)
 {
     usprintf(print_buf, "%d ", g_state);
     RIT128x96x4StringDraw(print_buf, 110, 10, 15);
@@ -186,7 +186,6 @@ void lwIPHostTimerHandler(void)                                         // This 
     {
         enqueue_event(EV_BROADCAST);                                    // broadcast presence, if no gateways have announced themselves yet
     }
-    
 }
 
 
