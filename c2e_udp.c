@@ -136,17 +136,13 @@ static void process_CAN_data(unsigned char *data, uint32_t size)
     uint32_t position = 0;
     while (position < size)
     {
-        uint32_t CAN_id = uchar_to_uint32(&data[0]);
-        position += 4;                                          // advance past CAN message ID
-        position += 8;                                          // advance past CAN data
-        uint32_t ext_id_flag = data[position];                  // CAN extended ID flag
-        position += 1;
-        uint32_t remote_tx_flag = data[position];
-        position += 1;
+        uint32_t CAN_id = uchar_to_uint32(&data[CAN_ID_POS]);
+        uint32_t ext_id_flag = data[EXT_FLAG_POS];                  // CAN extended ID flag
+        uint32_t remote_tx_flag = data[RTR_FLAG_POS];
+        position += CAN_FRAME_SIZE;
+        
         udp_rx_count += 1;
         update_count += 1;
-        //usprintf(print_buf, "%u", udp_rx_count);
-        //RIT128x96x4StringDraw(print_buf, 60, 10, 15);    
     }
 }
 
@@ -164,7 +160,6 @@ static int message_starts_with(unsigned char *data, unsigned char *start_str)
 // It produces the response packet, which is sent back to the querying client.
 void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr *addr, u16_t port)
 {
-
     unsigned char *data;
     data = p->payload;
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
