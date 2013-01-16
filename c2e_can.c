@@ -126,11 +126,11 @@ int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size)
     CAN_data.rx_msg_object.ulFlags = MSG_OBJ_RX_INT_ENABLE | MSG_OBJ_EXTENDED_ID | MSG_OBJ_USE_ID_FILTER | MSG_OBJ_USE_EXT_FILTER;
     CAN_data.rx_msg_object.pucMsgData = data;                          // allocate the memory from the beginning of the FIFO location
     
-    for(idx=0; idx < (CAN_FIFO_SIZE / 8); idx++)                        // Transfer bytes in multiples of eight bytes.
+    for( idx=0; idx < (CAN_FIFO_SIZE / 8); idx++ )                        // Transfer bytes in multiples of eight bytes.
     {
 
         // If there are more than eight remaining to be received then just queue up eight bytes and go on to the next message object(s) for the remaining bytes.
-        if(rx_size > 8)
+        if( rx_size > 8 )
         {
             CAN_data.rx_msg_object.ulMsgLen = 8;                       // The length is always eight as the full buffer is divisible by 8.
             rx_size -=8;                                                // There are now eight less bytes to receive.
@@ -152,11 +152,11 @@ void CAN_extract(unsigned char *data)
     CAN_data.tx_msg_object.ulMsgID = uchar_to_uint32(&data[CAN_ID_POS]);                                                // set CAN id
     CAN_data.tx_msg_object.ulMsgIDMask = 0;                                                 // don't mask any messages
     CAN_data.tx_msg_object.ulFlags = MSG_OBJ_TX_INT_ENABLE;                                 // enable interrupts for transmitted messages.
-    if (data[EXT_FLAG_POS])
+    if ( data[EXT_FLAG_POS] )
     {
         CAN_data.tx_msg_object.ulFlags |= MSG_OBJ_EXTENDED_ID;
     }
-    if (data[RTR_FLAG_POS])
+    if ( data[RTR_FLAG_POS] )
     {
         CAN_data.tx_msg_object.ulFlags |= MSG_OBJ_REMOTE_FRAME;   
     }
