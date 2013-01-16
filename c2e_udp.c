@@ -134,9 +134,11 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
 static void process_CAN_data(unsigned char *data, uint32_t size)
 {
     uint32_t position = 0;
-    while (position < size)
+    while (position < size)                                         // more than one CAN frame might be embedded
     {
+        unsigned char CAN_data[8];
         uint32_t CAN_id = uchar_to_uint32(&data[CAN_ID_POS]);
+        memcpy(&CAN_data,&data[0],8);
         uint32_t ext_id_flag = data[EXT_FLAG_POS];                  // CAN extended ID flag
         uint32_t remote_tx_flag = data[RTR_FLAG_POS];
         position += CAN_FRAME_SIZE;
