@@ -5,6 +5,7 @@
 #include "utils/ustdlib.h"
 #include "drivers/rit128x96x4.h"
 #include "config.h"
+#include "c2e_can.h"
 #include "c2e_events.h"
 #include "c2e_udp.h"
 #include "c2e_utils.h"
@@ -142,7 +143,7 @@ static void process_CAN_data(unsigned char *data, uint32_t size)
         uint32_t ext_id_flag = data[EXT_FLAG_POS];                  // CAN extended ID flag
         uint32_t remote_tx_flag = data[RTR_FLAG_POS];
         position += CAN_FRAME_SIZE;
-        
+        CAN_transmit(&CAN_data[0], 8, CAN_id, ext_id_flag, remote_tx_flag);
         udp_rx_count += 1;
         update_count += 1;
     }
@@ -173,49 +174,7 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     {
         add_gateway(*addr);
     }
-    
-
-
-/*
-    //
-    // Validate the contents of the datagram.
-    //
-    pucData = p->payload;
-    if((p->len != 4) || (pucData[0] != TAG_CMD) || (pucData[1] != 4) ||
-       (pucData[2] != CMD_DISCOVER_TARGET) ||
-       (pucData[3] != ((0 - TAG_CMD - 4 - CMD_DISCOVER_TARGET) & 0xff)))
-    {
-        pbuf_free(p);
-        return;
-    }
-*/
-    //
-    // The incoming pbuf is no longer needed, so free it.
-    //
     pbuf_free(p);
-
-    
-
-    //
-    // Copy the response packet data into the pbuf.
-    //
-    /*
-    pucData = p->payload;
-    for(ulIdx = 0; ulIdx < sizeof(g_pucLocatorData); ulIdx++)
-    {
-        pucData[ulIdx] = g_pucLocatorData[ulIdx];
-    }
-    */
-
-    //
-    // Send the response.
-    //
-    //udp_sendto(pcb, p, addr, port);
-
-    //
-    // Free the pbuf.
-    //
-    //pbuf_free(p);
 }
 
 void UDP_send_CAN(unsigned char *data, uint32_t size)
