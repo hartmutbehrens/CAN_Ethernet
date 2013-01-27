@@ -1,6 +1,7 @@
 #
 # Defines the part type that this project uses.
 #
+#define DEBUG
 PART=LM3S2965
 
 #

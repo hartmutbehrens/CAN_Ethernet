@@ -13,8 +13,6 @@
 #include "config.h"
 #include "c2e_eth.h"
 
-static volatile uint32_t systick_flag;								// flag for indicating that a SysTick has occured
-
 uint32_t ETH_init(void)
 {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_ETH);                          // Enable the Ethernet Controller.

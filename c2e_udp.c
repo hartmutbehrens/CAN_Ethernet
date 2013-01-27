@@ -87,7 +87,7 @@ void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_addr
         RIT128x96x4StringDraw("UDP TX ERR", 5, 60, 15);    
     }
     
-    pbuf_free(p);                                               // Free the pbuf.
+    pbuf_free(p);
     udp_remove(pcb);
 }
 
@@ -103,12 +103,12 @@ static int message_starts_with(unsigned char *data, unsigned char *start_str)
 
 void process_CAN_data(unsigned char *data, uint32_t total_size)
 {
-    uint32_t position = sizeof(C2E_DATA_ID);
+    uint32_t position = sizeof(C2E_DATA_ID);						// CAN message packed inside UDP starts with C2E_DATA_ID, so..
     while (position < total_size)
     {
-        CAN_extract(&data[position]);
+        CAN_extract(&data[position]);								// ..skip to this position and extract CAN data
         CAN_transmit();
-        position += CAN_FRAME_SIZE;
+        position += CAN_FRAME_SIZE;									// any following CAN messages are just appended. C2E_DATA_ID is not repeated
     }
 }
 
@@ -142,7 +142,7 @@ void UDP_send_CAN(unsigned char *data, uint32_t size)
     memcpy(&message[preamble_size], &data[0], size);
     for (int i = 0; i < g_gw_count; i++)                                          
     {
-        UDP_send_msg(&message[0], total_size, &g_gateways[g_gw_count]);                  // send to gateway
+        UDP_send_msg(&message[0], total_size, &g_gateways[g_gw_count]);                  // send to registered gateway
     }
 }
 

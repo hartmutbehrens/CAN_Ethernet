@@ -96,11 +96,11 @@ uint32_t CAN_init(void)                                                 // Enabl
     CANIntEnable(CAN0_BASE, CAN_INT_MASTER | CAN_INT_ERROR);            // Enable interrupts from CAN controller.
     IntEnable(INT_CAN0);                                                // Enable interrupts for the CAN in the NVIC.
     CANEnable(CAN0_BASE);                                               // Take the CAN0 device out of INIT state.
-    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE);     // Configure the receive message FIFO - this function should only be called once.    
+    CAN_receive_FIFO(CAN_data.rx_buffer, CAN_FIFO_SIZE);     			// Configure the receive message FIFO - this function should only be called once.
     return ST_CANINIT;
 }
 
-// This function transmits 8 bytes at a time
+// This function transmits 8 bytes at a time out on the CAN bus
 void CAN_transmit()
 {
     CANMessageSet(CAN0_BASE, 1, &CAN_data.tx_msg_object, MSG_OBJ_TYPE_TX);                  // Write out this message object using CAN object 1
@@ -170,6 +170,5 @@ void PENDSV_handler(void)
     unsigned char message[size];                                        // allocate storage for message
     RingBufRead(&g_can_ringbuf, &message[0], size);
     UDP_send_CAN(&message[0], size);
-    //UDP_send_msg(message, size);                                      // send CAN frames over UDP
     HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_UNPEND_SV;                     // clear PendSV
 }
