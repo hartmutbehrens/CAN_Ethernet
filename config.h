@@ -2,13 +2,6 @@
 #define __C2E_CONFIG_H
 #include <stdint.h>
 
-typedef struct
-{
-	uint32_t state;
-	uint32_t event;
-	uint32_t (*fn)(void);
-} transition_t;																						// state machine transition struct
-
 #ifndef DHCP_EXPIRE_TIMER_SECS
 #define DHCP_EXPIRE_TIMER_SECS 45			// Timeout for DHCP address request
 #endif

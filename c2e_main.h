@@ -2,6 +2,13 @@
 #define __C2E_CAN_ETHERNET_H
 #include <stdint.h>
 
+typedef struct
+{
+	uint32_t state;
+	uint32_t event;
+	uint32_t (*fn)(void);
+} transition_t;														// state machine transition struct
+
 static uint32_t fsm_any(void);									    // catch all state machine function that executes when STATE = ANY and EVENT = ANY
 static uint32_t BOARD_init(void);									// initialize clock, power, display
 static uint32_t INT_init(void);										// Master interrupt enable
