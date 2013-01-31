@@ -14,7 +14,7 @@
 #define PRINT_BUF_SIZE 20					// OLED print buffer size
 #define EV_RINGBUF_SIZE 64  				// size of event ring buffer, accomodate up to 64 events
 #define CAN_FIFO_SIZE   (8 * 8)             // size of FIFO buffers allocated to the CAN controller - 8 messages can each hold a max of 8 bytes
-#define CAN_BITRATE 1000000                 // set CAN bitrate to 1Mbps
+#define CAN_BITRATE 800000                 // set CAN bitrate to 1Mbps
 #define MAX_CAN_GATEWAYS 4 					// number of CAN gateways to keep track of
 #define CAN_ID_POS 0 						// position of CAN message ID in CAN frame
 #define CAN_DATA_POS 4 						// position of CAN data in CAN frame
@@ -46,7 +46,12 @@
 #define EV_BROADCAST 6 					    // send UDP broadcast message to announce presence
 #define EV_FOUNDGW 7
 #define EV_CHECKIP 8
+// C2E Commands
+#define CMD_OPTION_LEN 12					// length of options that can be set
+#define CMD_C2E_ADVERTISE 2
+#define CMD_C2E_SENDCAN 7
 
+//SysTick intervals
 #define SYSTICKHZ 100
 #define SYSTICKMS (1000 / SYSTICKHZ)
 #define SYSTICKUS (1000000 / SYSTICKHZ)

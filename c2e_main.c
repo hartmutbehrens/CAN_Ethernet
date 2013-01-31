@@ -73,7 +73,6 @@ static uint32_t broadcast_presence(void)
 {
    UDP_broadcast_presence();                                                // send UDP broadcast messages to indicate the presence of a CAN2Ethernet gateway
     return g_state;
-    //HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV
 }
 
 // wait for stuff to happen - return to previous state

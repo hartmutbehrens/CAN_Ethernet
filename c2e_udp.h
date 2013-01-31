@@ -1,16 +1,14 @@
 #ifndef __C2E_UDP_H
 #define __C2E_UDP_H
 #include <stdint.h>
+#include "config.h"
 #include "lwip/udp.h"
 
 typedef struct
 {
-	 struct udp_pcb *pcb;
-	 struct pbuf *p_out;
-	 unsigned char size[4];
-	 unsigned char msg_type;
-	 unsigned char *msg_out;
-} udp_can_struct_t;
+	unsigned char options[CMD_OPTION_LEN];
+	unsigned char *msg;
+} udp_message;
 
 void add_gateway(struct ip_addr gw_address);						// add an IP address to the list of known gateways
 uint32_t gateway_count(void);										// return the number of known gateways

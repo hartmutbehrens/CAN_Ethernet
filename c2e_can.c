@@ -103,7 +103,7 @@ uint32_t CAN_init(void)                                                 // Enabl
 // This function transmits 8 bytes at a time out on the CAN bus
 void CAN_transmit()
 {
-    CANMessageSet(CAN0_BASE, 1, &CAN_data.tx_msg_object, MSG_OBJ_TYPE_TX);                  // Write out this message object using CAN object 1
+    //CANMessageSet(CAN0_BASE, 1, &CAN_data.tx_msg_object, MSG_OBJ_TYPE_TX);                  // Write out this message object using CAN object 1
     tx_message_count += 1;
     update_count += 1;
 }
