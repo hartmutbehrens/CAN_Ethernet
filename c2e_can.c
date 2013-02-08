@@ -51,12 +51,12 @@ void CAN_handler(void)
     uint32_t status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);             // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority
     while (status)
     {
-		if(status <= 2)                                                           // The first eight message objects make up the Transmit message FIFO.
+		if(status <= 2)                                                           // The first two message objects are for transmit
 		{
 			CANIntClear(CAN0_BASE, status);                                     // Acknowledge the CAN controller interrupt has been handled.
 			CAN_data.bytes_transmitted += 8;                                      // Increment the number of bytes transmitted.
 		}
-		else if((status > 2) && (status <= 32))                                   // The second eight message objects make up the Receive message FIFO.
+		else if((status > 2) && (status <= 32))                                   // The rest of the objects make up the Receive message FIFO.
 		{
 			rx_message_count += 1;
 			update_count += 1;
