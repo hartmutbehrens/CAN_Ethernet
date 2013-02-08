@@ -2,6 +2,8 @@
 #define __C2E_CONFIG_H
 #include <stdint.h>
 
+#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
+
 #ifndef DHCP_EXPIRE_TIMER_SECS
 #define DHCP_EXPIRE_TIMER_SECS 45			// Timeout for DHCP address request
 #endif
@@ -10,10 +12,10 @@
 #define CAN_FRAME_SIZE 14                   // size of CAN frame to be sent via UDP
 #define CAN_UPDATERATE 100 					// rate at which to display  CAN message statistics
 #define UDP_UPDATERATE 100 					// rate at which to display  UDP message statistics
-#define CAN_RINGBUF_SIZE (CAN_FRAME_SIZE*80)  // size of ring buffer, accomodate up to 160 frames, probably a bit excessive
+#define CAN_RINGBUF_SIZE (CAN_FRAME_SIZE*80)  // size of ring buffer, accomodate up to 80 frames, probably a bit excessive
 #define PRINT_BUF_SIZE 20					// OLED print buffer size
 #define EV_RINGBUF_SIZE 64  				// size of event ring buffer, accomodate up to 64 events
-#define CAN_FIFO_SIZE   (8 * 8)             // size of FIFO buffers allocated to the CAN controller - 8 messages can each hold a max of 8 bytes
+#define CAN_FIFO_SIZE   (30 * 8)             // size of FIFO buffers allocated to the CAN controller - 8 messages can each hold a max of 8 bytes
 #define CAN_BITRATE 800000                 // set CAN bitrate to 1Mbps
 #define MAX_CAN_GATEWAYS 4 					// number of CAN gateways to keep track of
 #define CAN_ID_POS 0 						// position of CAN message ID in CAN frame

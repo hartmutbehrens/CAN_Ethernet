@@ -142,6 +142,7 @@ void UDP_send_CAN(unsigned char *data, uint32_t size)
     for (int i = 0; i < g_gw_count; i++)                                          
     {
         UDP_send_msg(&message[0], total_size, &g_gateways[g_gw_count]);                  // send to registered gateway
+    	//UDP_send_msg(&message[0], total_size, IP_ADDR_BROADCAST);                  // broadcast
     }
 }
 

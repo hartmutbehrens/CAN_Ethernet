@@ -46,42 +46,47 @@ static void write_to_ringbuf(tCANMsgObject *can_object, uint32_t id)            
     RingBufWrite(&g_can_ringbuf, &frame[0], CAN_FRAME_SIZE);
 }
 
-// CAN controller interrupt handler.
 void CAN_handler(void)
 {
-    uint32_t status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);             // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority   
-    if(status <= 8)                                                           // The first eight message objects make up the Transmit message FIFO.
+    uint32_t status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);             // Find the cause of the interrupt, status 1-32 = ID of message object with highest priority
+    while (status)
     {
-        CAN_data.bytes_transmitted += 8;                                      // Increment the number of bytes transmitted.
-    }
-    else if((status > 8) && (status <= 16))                                   // The second eight message objects make up the Receive message FIFO.
-    {
-        rx_message_count += 1;
-        update_count += 1;
-        CANMessageGet(CAN0_BASE, status, &CAN_data.rx_msg_object, 1);         // Read the data out and acknowledge that it was read.
+		if(status <= 2)                                                           // The first eight message objects make up the Transmit message FIFO.
+		{
+			CANIntClear(CAN0_BASE, status);                                     // Acknowledge the CAN controller interrupt has been handled.
+			CAN_data.bytes_transmitted += 8;                                      // Increment the number of bytes transmitted.
+		}
+		else if((status > 2) && (status <= 32))                                   // The second eight message objects make up the Receive message FIFO.
+		{
+			rx_message_count += 1;
+			update_count += 1;
+			CANMessageGet(CAN0_BASE, status, &CAN_data.rx_msg_object, 1);         // Read the data out and acknowledge that it was read.
 
-        if(CAN_data.rx_msg_object.ulFlags & MSG_OBJ_DATA_LOST)                // Check to see if there is an indication that some messages were lost.
-        {
-            lost_message_count += 1;
-        }
+			if(CAN_data.rx_msg_object.ulFlags & MSG_OBJ_DATA_LOST)                // Check to see if there is an indication that some messages were lost.
+			{
+				lost_message_count += 1;
+			}
 
-        write_to_ringbuf(&CAN_data.rx_msg_object, (status - 9) );             // write the CAN data to a ringbuffer for further processing
-        
-        CAN_data.rx_msg_object.pucMsgData += 8;                               // Advance the read pointer.
-        CAN_data.bytes_remaining -= 8;                                        // Decrement the expected bytes remaining.
-        
-        if(CAN_data.bytes_remaining == 0)                                     // this is to avoid memory filling up
-        {
-            CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;           // re-assign pointer to buffer that will hold message data - seems to be necessary to prevent lock-up (presumably due to memory fillup?)
-            CAN_data.bytes_remaining = CAN_FIFO_SIZE;                         // reset number of bytes expected
-        }
-        HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV in order to send CAN packets
+			write_to_ringbuf(&CAN_data.rx_msg_object, (status - 3) );             // write the CAN data to a ringbuffer for further processing
+
+			CAN_data.rx_msg_object.pucMsgData += 8;                               // Advance the read pointer.
+			CAN_data.bytes_remaining -= 8;                                        // Decrement the expected bytes remaining.
+
+			if(CAN_data.bytes_remaining == 0)                                     // this is to avoid memory filling up
+			{
+				CAN_data.rx_msg_object.pucMsgData = CAN_data.rx_buffer;           // re-assign pointer to buffer that will hold message data - seems to be necessary to prevent lock-up (presumably due to memory fillup?)
+				CAN_data.bytes_remaining = CAN_FIFO_SIZE;                         // reset number of bytes expected
+			}
+
+			HWREG(NVIC_INT_CTRL) = NVIC_INT_CTRL_PEND_SV;                         // Trigger PendSV in order to send CAN packets
+		}
+		else
+		{
+			CANStatusGet(CAN0_BASE, CAN_STS_CONTROL);                       // status interrupt so read the current status to clear the interrupt
+		}
+		//CANIntClear(CAN0_BASE, status);                                     // Acknowledge the CAN controller interrupt has been handled.
+		status = CANIntStatus(CAN0_BASE, CAN_INT_STS_CAUSE);
     }
-    else
-    {
-        CANStatusGet(CAN0_BASE, CAN_STS_CONTROL);                       // status interrupt so read the current status to clear the interrupt
-    }
-    CANIntClear(CAN0_BASE, status);                                     // Acknowledge the CAN controller interrupt has been handled.
 }
 
 
@@ -135,13 +140,13 @@ int CAN_receive_FIFO(unsigned char *data, uint32_t rx_size)
             CAN_data.rx_msg_object.ulMsgLen = 8;                       // The length is always eight as the full buffer is divisible by 8.
             rx_size -=8;                                                // There are now eight less bytes to receive.
             CAN_data.rx_msg_object.ulFlags |= MSG_OBJ_FIFO;            // Set the MSG_OBJ_FIFO to indicate that this is not the last data in a chain of FIFO entries.
-            CANMessageSet(CAN0_BASE, idx + 9, &CAN_data.rx_msg_object, MSG_OBJ_TYPE_RX);   // Make sure that all message objects up to the last indicate that they are part of a FIFO.
+            CANMessageSet(CAN0_BASE, idx + 3, &CAN_data.rx_msg_object, MSG_OBJ_TYPE_RX);   // Make sure that all message objects up to the last indicate that they are part of a FIFO.
         }
         else 
         {
             CAN_data.rx_msg_object.ulMsgLen = rx_size;                 // Get the remaining bytes.
             CAN_data.rx_msg_object.ulFlags &= ~MSG_OBJ_FIFO;           // Clear the MSG_OBJ_FIFO to indicate that this is the last data in a chain of FIFO entries.
-            CANMessageSet(CAN0_BASE, idx + 9, &CAN_data.rx_msg_object, MSG_OBJ_TYPE_RX);   // This is the last message object in a FIFO so don't set the FIFO to indicate that the FIFO ends with this message object.
+            CANMessageSet(CAN0_BASE, idx + 3, &CAN_data.rx_msg_object, MSG_OBJ_TYPE_RX);   // This is the last message object in a FIFO so don't set the FIFO to indicate that the FIFO ends with this message object.
         }
     }
     return(0);

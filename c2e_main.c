@@ -79,7 +79,7 @@ static uint32_t broadcast_presence(void)
 static uint32_t wait(void)
 {
     display_state();
-    display_UDP_statistics();
+    //display_UDP_statistics();
     display_CAN_statistics();
     return g_state;
 }  
