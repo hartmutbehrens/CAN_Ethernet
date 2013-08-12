@@ -53,7 +53,9 @@ clean:
 	@rm -rf ${COMPILER} ${wildcard *~}
 
 #
-# Install - OpenOCD has to be running for this to work
+# Install - OpenOCD has to be running for this to work, use included ekc-lm3s8962.cfg file
+# run OpenOCD with command "openocd -f ekc-lm3s8962.cfg" in one terminal
+# and then in another "make install"
 #
 install:
 	@echo "flash_load ${PWD}/gcc/can_ethernet.bin" | telnet localhost 4444
