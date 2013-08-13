@@ -15,7 +15,6 @@ uint32_t gateway_count(void);										// return the number of known gateways
 void display_UDP_statistics(void);									// display UDP TX/RX message statistics
 void display_gw_address(void);							            // display gateway IP addresses
 void UDP_send_CAN(unsigned char *data, uint32_t size);
-void UDP_reply_to_broadcast();
 void UDP_broadcast_presence();
 void UDP_send_msg(unsigned char *message, uint32_t size, struct ip_addr *ip_address);
 void UDP_start_listen(void);

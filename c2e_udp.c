@@ -31,13 +31,13 @@ void UDP_start_listen(void)
 //add a gateway IP address to the list of known gateways
 void add_gateway(struct ip_addr gw_address)
 {
-    
     //first check if we already have this gateway - don't add it again
     for (int i = 0; i < MAX_CAN_GATEWAYS; i++)
     {
        if (g_gateways[i].addr == gw_address.addr)
         {
-            return;
+    	   UDP_send_msg(C2E_BROADCAST_ID, sizeof(C2E_BROADCAST_ID), &gw_address);                  // reply back to gateway - NAUGHTY ! this really should be enqueued as an event
+           return;
         }
     }
     
@@ -143,14 +143,6 @@ void UDP_send_CAN(unsigned char *data, uint32_t size)
         UDP_send_msg(&message[0], total_size, &g_gateways[g_gw_count]);                  // send to registered gateway
     	//UDP_send_msg(&message[0], total_size, IP_ADDR_BROADCAST);                  // broadcast
     }
-}
-
-void UDP_reply_to_broadcast()
-{
-	for (int i = 0; i < g_gw_count; i++)
-	{
-		UDP_send_msg(C2E_BROADCAST_ID, sizeof(C2E_BROADCAST_ID), &g_gateways[g_gw_count]);                  // send to registered gateway
-	}
 }
 
 void UDP_broadcast_presence()
