@@ -112,7 +112,8 @@ static uint32_t handle_IP_change(void)
 // handle a addition of a gateway - change state to ST_GWFOUND
 static uint32_t handle_GW_change(void)
 {
-    display_gw_address();                   // display gateway address
+	UDP_reply_to_broadcast();
+	display_gw_address();                   // display gateway address
     enqueue_event(EV_INITCAN);              // schedule initialization of CAN
     return ST_GWFOUND;
 }

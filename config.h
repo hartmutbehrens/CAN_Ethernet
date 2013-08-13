@@ -38,16 +38,15 @@
 #define ST_DISPLAY 12
 #define ST_TERM 98
 //state machine event declarations
-#define EV_ANY 99 							// catch all event
-#define EV_POWERON 0
+#define EV_ANY      99 						// catch all event
+#define EV_POWERON   0
 #define EV_IPCHANGED 1 						// IP address obtained 
-#define EV_INITETH 2						// send the initialize ethernet event
-#define EV_INITCAN 3						// send the initialize CAN event
-#define EV_INITINT 4						// send the initialize interrupts event
-#define EV_INITLWIP 5						// send the initialize lwIP event
+#define EV_INITETH   2						// send the initialize ethernet event
+#define EV_INITCAN   3						// send the initialize CAN event
+#define EV_INITINT   4						// send the initialize interrupts event
+#define EV_INITLWIP  5						// send the initialize lwIP event
 #define EV_BROADCAST 6 					    // send UDP broadcast message to announce presence
-#define EV_FOUNDGW 7
-#define EV_CHECKIP 8
+#define EV_FOUNDGW   7
 // C2E Commands
 #define CMD_OPTION_LEN 12					// length of options that can be set
 #define CMD_C2E_ADVERTISE 2
