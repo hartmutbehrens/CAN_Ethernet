@@ -14,9 +14,6 @@ unsigned char C2E_BROADCAST_ID[5] = {'C', '2', 'E', 'B', 'C'};           // iden
 unsigned char C2E_DATA_ID[5] = {'C', '2', 'E', 'D', 'T'};           // identifier for broadcast messages
 static struct ip_addr g_gateways[MAX_CAN_GATEWAYS];
 static volatile uint32_t g_gw_count = 0;                                          // count of CAN gateways
-static volatile uint32_t udp_tx_count = 0;
-static volatile uint32_t udp_rx_count = 0;
-static volatile uint32_t update_count = 0;                                      // print CAN updates once this threshold is reached
 
 void UDP_start_listen(void)
 {
@@ -119,8 +116,6 @@ void UDP_receive(void *arg, struct udp_pcb *pcb, struct pbuf *p, struct ip_addr 
     if ( message_starts_with(data, C2E_DATA_ID) )           // received a message with CAN data, so send it out on the CAN i/f
     {
         process_CAN_data(&data[0], p->len);
-        udp_rx_count += 1;
-        update_count += 1;
     }
     if ( message_starts_with(data, C2E_BROADCAST_ID) )      // found a gateway, so add the IP address to the list of known gateways
     {
@@ -134,32 +129,18 @@ void UDP_send_CAN(unsigned char *data, uint32_t size)
     uint32_t preamble_size = sizeof(C2E_DATA_ID);
     uint32_t total_size = size + preamble_size;
     unsigned char message[total_size];
-    udp_tx_count += (size / CAN_FRAME_SIZE);
-    update_count += udp_tx_count;
     memcpy(&message[0], &C2E_DATA_ID[0], preamble_size);
     memcpy(&message[preamble_size], &data[0], size);
-    for (int i = 0; i < g_gw_count; i++)                                          
-    {
-        UDP_send_msg(&message[0], total_size, &g_gateways[i]);                  // send to registered gateway
-    	//UDP_send_msg(&message[0], total_size, IP_ADDR_BROADCAST);                  // broadcast
-    }
+    //for (int i = 0; i < g_gw_count; i++)
+    //{
+        //UDP_send_msg(&message[0], total_size, &g_gateways[i]);                  // send to registered gateway
+    	UDP_send_msg(&message[0], total_size, IP_ADDR_BROADCAST);                  // broadcast
+    //}
 }
 
 void UDP_broadcast_presence()
 {
      UDP_send_msg(C2E_BROADCAST_ID, sizeof(C2E_BROADCAST_ID), IP_ADDR_BROADCAST);
-}
-
-void display_UDP_statistics(void)
-{    
-    if ( update_count >= UDP_UPDATERATE )
-    {
-        usprintf(print_buf, "UDP TX %u   ", udp_tx_count);
-        RIT128x96x4StringDraw(print_buf, 5, 50, 15);
-        usprintf(print_buf, "UDP RX %u   ", udp_rx_count);
-        RIT128x96x4StringDraw(print_buf, 5, 60, 15);
-        update_count = 0;                                   // reset the update count
-    } 
 }
 
 // display gateway IP address

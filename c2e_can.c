@@ -27,9 +27,10 @@ void display_CAN_statistics(void)
 {    
     if (update_count >= CAN_UPDATERATE)
     {
-        usprintf(print_buf, "CAN TX %u   ", tx_message_count);
-        RIT128x96x4StringDraw(print_buf, 5, 70, 15);
-        usprintf(print_buf, "CAN RX %u/%u   ", lost_message_count, rx_message_count);
+        //usprintf(print_buf, "CAN TX %u   ", tx_message_count);
+        //RIT128x96x4StringDraw(print_buf, 5, 70, 15);
+        //usprintf(print_buf, "CAN RX %u/%u   ", lost_message_count, rx_message_count);
+    	usprintf(print_buf, "CAN LOST %u   ", lost_message_count);
         RIT128x96x4StringDraw(print_buf, 5, 80, 15);
         update_count = 0;                                   // reset the update count
     } 
